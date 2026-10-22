@@ -46,6 +46,7 @@ Verified on the development machine:
 | ros2_control | 2.54.3 | `controller_manager`, `ros2_controllers` |
 | MoveIt 2 | 2.5.10 | `ros-humble-moveit` (via apt) |
 | Robot description | local `franka_description` 0.1.0 | meshes and kinematics derived from upstream 1.0.1 |
+| Controllers | local `franka_controller` 0.1.0 | `controllers.yaml` and controller spawners |
 
 ### 2.1 Dependencies to install
 
@@ -67,12 +68,12 @@ sudo apt install \
     ros-humble-xacro
 ```
 
-> The workspace ships its own `franka_description` package.  Do **not** install
-> `ros-humble-franka-description` alongside it: both provide the same ament
-> resource name and the overlay would shadow one of them.  The local package
-> reuses the official Franka meshes and kinematics so it stays drop-in
-> compatible with upstream, while remaining easy to extend (payloads, camera
-> mounts, additional grippers).
+> The workspace ships its own `franka_description` and `franka_controller`
+> packages.  Do **not** install `ros-humble-franka-description` alongside them:
+> both provide the same ament resource name and the overlay would shadow one of
+> them.  The local description reuses the official Franka meshes and kinematics
+> so it stays drop-in compatible with upstream, while remaining easy to extend
+> (payloads, camera mounts, additional grippers).
 
 ---
 
@@ -84,17 +85,26 @@ franka_ws/
 ├── README.md
 ├── media/                      # README images
 └── src/
-    ├── franka_controller/      # controller configuration and spawners
-    └── franka_description/     # URDF/Xacro, meshes, launch, RViz
+    ├── franka_controller/
+    │   ├── config/controllers.yaml      # controller types and parameters
+    │   └── launch/controller.launch.py  # spawners for an existing manager
+    └── franka_description/
+        ├── urdf/                        # Xacro macros, ros2_control, Gazebo
+        ├── launch/                      # RViz and Gazebo launch files
+        ├── meshes/                      # visual and collision meshes
+        └── rviz/panda.rviz              # RViz layout
 ```
 
-Planned: `franka_moveit` (Stage 5) and `franka_manipulation` (Stage 6).
+The description and the controllers are separate packages: the URDF knows
+nothing about how controllers are started, so the same description can drive
+Gazebo, MoveIt or real hardware.  Planned: `franka_moveit` (Stage 5) and
+`franka_manipulation` (Stage 6).
 
 **Naming conventions**
 
 - Packages: `franka_<domain>`
 - Namespaces: `/franka`
-- Frames: `base_link`, `panda_link0` … `panda_link8`, `panda_hand`, `panda_grasp_frame`
+- Frames: `world` (optional fixed base), `panda_link0` … `panda_link8`, `panda_hand`, `panda_hand_tcp`, `panda_grasp_frame`
 - Controllers: `panda_arm_controller` (joint trajectory), `panda_hand_controller` (gripper)
 
 ---
@@ -129,8 +139,8 @@ ros2 launch franka_controller controller.launch.py
 ros2 launch franka_moveit moveit.launch.py
 ```
 
-`visualize_panda.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui` and
-`rviz`, e.g. `hand:=false gui:=false`.
+`visualize_panda.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui`, `rviz`
+and `use_sim_time`, e.g. `hand:=false gui:=false`.
 
 `gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
 The Gazebo flavour is detected from `ROS_DISTRO`: Ignition on Humble, and gz
@@ -138,6 +148,24 @@ with the Bullet Featherstone engine on Iron and newer.  It does not load any
 controllers: run `controller.launch.py` in a second terminal afterwards.
 
 `controller.launch.py` accepts `controller_manager`, `timeout` and `hand`.
+
+### 4.3 Control the robot
+
+With the controllers active, send a joint trajectory to the arm:
+
+```bash
+ros2 action send_goal /panda_arm_controller/follow_joint_trajectory \
+  control_msgs/action/FollowJointTrajectory \
+  "{trajectory: {joint_names: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7], points: [{positions: [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785], time_from_start: {sec: 3}}]}}"
+```
+
+and open or close the gripper (position in metres):
+
+```bash
+ros2 action send_goal /panda_hand_controller/gripper_cmd \
+  control_msgs/action/GripperCommand \
+  "{command: {position: 0.04, max_effort: 10.0}}"
+```
 
 ---
 
@@ -158,6 +186,8 @@ controllers: run `controller.launch.py` in a second terminal afterwards.
 | Gazebo opens blank / errors on meshes | make sure the package is sourced, `package://` URIs are resolved from the ament index |
 | Gazebo Sim rejects the model | check `gz sim` output; the usual cause is an invalid inertia tensor or a missing plugin |
 | `ros2_control` controller fails to activate | `controller_manager` did not load the hardware plugin — check the `<ros2_control>` tag and `robot_description` remapping |
+| `No controllers are currently loaded` | `gazebo.launch.py` does not start any; run `ros2 launch franka_controller controller.launch.py` |
+| Spawner cannot contact `/controller_manager` | the model has not been spawned yet — start Gazebo first or raise `timeout:=` |
 | RViz shows a broken robot | `robot_state_publisher` is not publishing TF; run `ros2 run tf2_tools view_frames` to inspect |
 | MoveIt says "no kinematics solver" | `kinematics.yaml` is missing or the group name does not match the SRDF group |
 | `colcon build` fails on a stale package | `rm -rf build install log` and rebuild |
