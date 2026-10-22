@@ -45,7 +45,7 @@ Verified on the development machine:
 | Gazebo | Sim 6.18 (Ignition Fortress) | `ros_gz_sim`, `ign_ros2_control` |
 | ros2_control | 2.54.3 | `controller_manager`, `ros2_controllers` |
 | MoveIt 2 | 2.5.10 | `ros-humble-moveit` (via apt) |
-| Robot description | local `franka_description` 0.1.0 | meshes and kinematics derived from upstream 1.0.1 |
+| Robot description | local `franka_description` 0.1.0 | original URDF/Xacro, Panda meshes (Apache-2.0) |
 | Controllers | local `franka_controller` 0.1.0 | `controllers.yaml` and controller spawners |
 
 ### 2.1 Dependencies to install
@@ -71,9 +71,10 @@ sudo apt install \
 > The workspace ships its own `franka_description` and `franka_controller`
 > packages.  Do **not** install `ros-humble-franka-description` alongside them:
 > both provide the same ament resource name and the overlay would shadow one of
-> them.  The local description reuses the official Franka meshes and kinematics
-> so it stays drop-in compatible with upstream, while remaining easy to extend
-> (payloads, camera mounts, additional grippers).
+> them.  Only the Panda meshes come from Franka Robotics (Apache-2.0); the
+> URDF/Xacro, kinematics, controllers and launch files are reimplemented here,
+> which keeps the model drop-in compatible with upstream while remaining easy
+> to extend (payloads, camera mounts, additional grippers).
 
 ---
 
@@ -210,10 +211,22 @@ ros2 topic echo /joint_states
 - [MoveIt 2 tutorials](https://moveit.picknik.ai/main/index.html)
 - [ros2_control — controller manager](https://control.ros.org/humble/doc/ros2_control/controller_manager/doc/userdoc.html)
 - [Gazebo Sim / ros_gz](https://gazebosim.org/docs)
-- [Franka description (franka_description)](https://github.com/frankaemika/franka_ros)
+- [Franka ROS 2 (franka_ros2)](https://github.com/frankarobotics/franka_ros2)
 
 ---
 
 ## 8. License
 
-Released under the [MIT License](LICENSE).
+The code, URDF/Xacro files, launch files and documentation in this repository
+are released under the [MIT License](LICENSE).
+
+Third-party assets keep their original licenses:
+
+- **Meshes** — `src/franka_description/meshes/` contains the Franka Emika Panda
+  visual and collision meshes, Copyright 2023 Franka Robotics GmbH, obtained
+  from [frankarobotics/franka_ros2](https://github.com/frankarobotics/franka_ros2)
+  and licensed under the [Apache License 2.0](src/franka_description/meshes/LICENSE).
+  The files are redistributed unmodified; see [NOTICE](NOTICE) and
+  [`meshes/NOTICE`](src/franka_description/meshes/NOTICE).
+- **Preview photo** — `media/panda_real.jpg` by *Ims*, licensed under
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).

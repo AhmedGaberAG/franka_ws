@@ -1,0 +1,26 @@
+franka_ws
+=========
+
+Copyright 2026 Ahmed Gaber
+
+Unless stated otherwise, the source code, URDF/Xacro files, launch
+files, configuration and documentation in this repository are original
+work by Ahmed Gaber and are licensed under the MIT License (see
+LICENSE).
+
+Third-party assets
+------------------
+
+src/franka_description/meshes/
+    Franka Emika Panda visual and collision meshes, obtained from
+    https://github.com/frankarobotics/franka_ros2.
+    Copyright 2023 Franka Robotics GmbH.
+    Licensed under the Apache License, Version 2.0.
+    See src/franka_description/meshes/NOTICE and
+    src/franka_description/meshes/LICENSE.
+
+media/panda_real.jpg
+    Photo of a Franka Emika Panda by "Ims", via Wikimedia Commons:
+    https://commons.wikimedia.org/wiki/File:Franka_Emika2.jpg
+    Licensed under CC BY-SA 4.0:
+    https://creativecommons.org/licenses/by-sa/4.0/

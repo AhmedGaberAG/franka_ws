@@ -8,7 +8,7 @@
     parallel-jaw hand.
   </description>
   <maintainer email="ahmedmgaber28@gmail.com">Ahmed Gaber</maintainer>
-  <license>MIT</license>
+  <license>MIT AND Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
