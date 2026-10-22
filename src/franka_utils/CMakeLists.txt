@@ -7,8 +7,29 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
+# Install the Python package with a different name to avoid conflict with launcher
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/franka_gui
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/franka_gui_pkg)
 install(
-  PROGRAMS scripts/franka_gui.py
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/franka_gui_pkg
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the entry point
+install(
+  PROGRAMS scripts/franka_gui/main.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME franka_gui_main.py
+)
+
+# Create a convenience launcher script that sets PYTHONPATH
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/scripts/franka_gui/franka_gui.in
+  ${CMAKE_CURRENT_BINARY_DIR}/franka_gui
+  @ONLY
+)
+install(
+  PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/franka_gui
   DESTINATION lib/${PROJECT_NAME}
 )
 
