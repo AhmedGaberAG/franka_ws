@@ -22,11 +22,15 @@ install(
   RENAME franka_gui_main.py
 )
 
-# Install the launcher script (sets PYTHONPATH and runs the GUI)
+# Create a launcher script at configure time
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/franka_utils/franka_gui/franka_gui.in
+  ${CMAKE_CURRENT_BINARY_DIR}/franka_gui
+  @ONLY
+)
 install(
-  PROGRAMS franka_utils/franka_gui/franka_gui_launcher
+  PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/franka_gui
   DESTINATION lib/${PROJECT_NAME}
-  RENAME franka_gui
 )
 
 install(
