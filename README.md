@@ -27,7 +27,7 @@ The RViz screenshot shows the generated model at the ready pose.
 | 2 | Gazebo Sim + `ros2_control` hardware interface | **Done** |
 | 3 | Controllers (joint trajectory, gripper) | **Done** |
 | 4 | RViz / `robot_state_publisher` visualisation | **Done** |
-| 5 | MoveIt 2 configuration (SRDF, kinematics, planners, MoveIt Setup Assistant) | Planned |
+| 5 | MoveIt 2 configuration (SRDF, kinematics, planners, MotionPlanning) | **Done** |
 | 6 | Manipulation task nodes (e.g. pick & place) | Planned |
 | 7 | Integration tests + CI | Planned |
 
@@ -47,6 +47,7 @@ Verified on the development machine:
 | MoveIt 2 | 2.5.10 | `ros-humble-moveit` (via apt) |
 | Robot description | local `franka_description` 0.1.0 | original URDF/Xacro, Panda meshes (Apache-2.0) |
 | Controllers | local `franka_controller` 0.1.0 | `controllers.yaml` and controller spawners |
+| Motion planning | local `franka_moveit` 0.1.0 | SRDF, KDL, OMPL, MoveIt controllers |
 
 ### 2.1 Dependencies to install
 
@@ -54,12 +55,6 @@ Verified on the development machine:
 sudo apt update
 sudo apt install \
     ros-humble-moveit \
-    ros-humble-moveit-ros-perception \
-    ros-humble-moveit-ros-visualization \
-    ros-humble-moveit-ros-planning \
-    ros-humble-moveit-ros-planning-interface \
-    ros-humble-moveit-configs-utils \
-    ros-humble-moveit-resources-panda-moveit-config \
     ros-humble-joint-state-publisher-gui \
     ros-humble-ros2-controllers \
     ros-humble-ros-gz-sim \
@@ -68,10 +63,11 @@ sudo apt install \
     ros-humble-xacro
 ```
 
-> The workspace ships its own `franka_description` and `franka_controller`
-> packages.  Do **not** install `ros-humble-franka-description` alongside them:
-> both provide the same ament resource name and the overlay would shadow one of
-> them.  Only the Panda meshes come from Franka Robotics (Apache-2.0); the
+> The workspace ships its own `franka_description`, `franka_controller` and
+> `franka_moveit` packages.  `ros-humble-moveit` provides the MoveIt binaries;
+> the Panda configuration itself is local.  Do **not** install
+> `ros-humble-franka-description` alongside `franka_description`: both
+> provide the same ament resource name and the overlay would shadow one of them.  Only the Panda meshes come from Franka Robotics (Apache-2.0); the
 > URDF/Xacro, kinematics, controllers and launch files are reimplemented here,
 > which keeps the model drop-in compatible with upstream while remaining easy
 > to extend (payloads, camera mounts, additional grippers).
@@ -89,17 +85,19 @@ franka_ws/
     ├── franka_controller/
     │   ├── config/controllers.yaml      # controller types and parameters
     │   └── launch/controller.launch.py  # spawners for an existing manager
-    └── franka_description/
-        ├── urdf/                        # Xacro macros, ros2_control, Gazebo
-        ├── launch/                      # RViz and Gazebo launch files
-        ├── meshes/                      # visual and collision meshes
-        └── rviz/panda.rviz              # RViz layout
+    ├── franka_description/
+    │   ├── urdf/                        # Xacro macros, ros2_control, Gazebo
+    │   ├── launch/                      # RViz and Gazebo launch files
+    │   ├── meshes/                      # visual and collision meshes
+    │   └── rviz/panda.rviz              # RViz layout
+    └── franka_moveit/
+        ├── config/                      # SRDF, KDL, limits, controllers, OMPL
+        └── launch/moveit.launch.py      # move_group + MotionPlanning
 ```
 
-The description and the controllers are separate packages: the URDF knows
-nothing about how controllers are started, so the same description can drive
-Gazebo, MoveIt or real hardware.  Planned: `franka_moveit` (Stage 5) and
-`franka_manipulation` (Stage 6).
+The packages are layered: the description knows nothing about controllers, and
+the controllers know nothing about planning.  The same description can drive
+Gazebo, MoveIt or real hardware.  `franka_manipulation` (Stage 6) is planned.
 
 **Naming conventions**
 
@@ -136,9 +134,15 @@ ros2 launch franka_description gazebo.launch.py
 # Stage 3 – load the controllers into the running controller manager
 ros2 launch franka_controller controller.launch.py
 
-# Stage 5+ – motion planning
+# Stage 5 – motion planning (run after the two launches above)
 ros2 launch franka_moveit moveit.launch.py
 ```
+
+For MoveIt, keep Gazebo and the controllers running in two terminals and start
+`moveit.launch.py` in a third one.  It starts `move_group` plus RViz with the
+MotionPlanning display; add `rviz:=false` for a headless run.  Other arguments
+are `prefix` (the SRDF assumes the default empty prefix), `hand` and
+`use_sim_time`.
 
 `display.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui`, `rviz`
 and `use_sim_time`, e.g. `hand:=false gui:=false`.
@@ -149,6 +153,10 @@ with the Bullet Featherstone engine on Iron and newer.  It does not load any
 controllers: run `controller.launch.py` in a second terminal afterwards.
 
 `controller.launch.py` accepts `controller_manager`, `timeout` and `hand`.
+
+`moveit.launch.py` does **not** start the robot, TF or controllers: it connects
+to the already running stack, with `moveit_manage_controllers: false` so that
+the spawners stay in charge of the controllers.
 
 ### 4.3 Control the robot
 
@@ -167,6 +175,20 @@ ros2 action send_goal /panda_hand_controller/gripper_cmd \
   control_msgs/action/GripperCommand \
   "{command: {position: 0.04, max_effort: 10.0}}"
 ```
+
+### 4.4 Plan and execute with MoveIt
+
+With all three launches running, use the **MotionPlanning** panel in RViz:
+
+1. Select the planning group `panda_arm`.
+2. Choose a goal state (`ready`, `extended`, `transport`) or drag the
+   interactive marker.
+3. Press **Plan**, inspect the trajectory, then **Plan & Execute**.
+
+The SRDF also defines the `panda_hand` and `panda_arm_hand` groups, and the
+gripper opens/closes through `panda_hand_controller`.  Collision checking uses
+the STL meshes; no octomap sensors are configured, so move_group logs
+`No 3D sensor plugin(s) defined` once at startup — this is expected.
 
 ---
 
@@ -191,6 +213,9 @@ ros2 action send_goal /panda_hand_controller/gripper_cmd \
 | Spawner cannot contact `/controller_manager` | the model has not been spawned yet — start Gazebo first or raise `timeout:=` |
 | RViz shows a broken robot | `robot_state_publisher` is not publishing TF; run `ros2 run tf2_tools view_frames` to inspect |
 | MoveIt says "no kinematics solver" | `kinematics.yaml` is missing or the group name does not match the SRDF group |
+| move_group starts but has no controllers | start `controller.launch.py` first and check `ros2 control list_controllers`; action names must match `moveit_controllers.yaml` |
+| RViz reports `/recognize_objects not available` | harmless: the perception capability is not loaded, planning still works |
+| `No 3D sensor plugin(s) defined` | expected: this configuration has no octomap/camera plugin |
 | `colcon build` fails on a stale package | `rm -rf build install log` and rebuild |
 
 Useful diagnostics:

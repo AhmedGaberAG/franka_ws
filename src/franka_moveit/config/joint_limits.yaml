@@ -1,0 +1,52 @@
+# Joint limits used by MoveIt's time parameterisation.  Position, velocity and
+# effort limits come from the URDF; accelerations and the default scaling
+# factors are planner settings.
+default_velocity_scaling_factor: 0.5
+default_acceleration_scaling_factor: 0.5
+
+joint_limits:
+  panda_joint1:
+    has_velocity_limits: true
+    max_velocity: 2.175
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint2:
+    has_velocity_limits: true
+    max_velocity: 2.175
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint3:
+    has_velocity_limits: true
+    max_velocity: 2.175
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint4:
+    has_velocity_limits: true
+    max_velocity: 2.175
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint5:
+    has_velocity_limits: true
+    max_velocity: 2.610
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint6:
+    has_velocity_limits: true
+    max_velocity: 2.610
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_joint7:
+    has_velocity_limits: true
+    max_velocity: 2.610
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  panda_finger_joint1:
+    has_velocity_limits: true
+    max_velocity: 0.2
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+  panda_finger_joint2:
+    has_velocity_limits: true
+    max_velocity: 0.2
+    has_acceleration_limits: true
+    max_acceleration: 1.0
