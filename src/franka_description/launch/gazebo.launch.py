@@ -1,7 +1,8 @@
 """Spawn the Panda in Gazebo Sim.
 
-Starts Gazebo Sim, publishes the robot description, spawns the model and loads
-the ros2_control controllers from ``franka_controller``.
+Starts Gazebo Sim, publishes the robot description and spawns the model.
+The controllers are loaded separately with
+``ros2 launch franka_controller controller.launch.py``.
 
 Examples
 --------
@@ -17,11 +18,9 @@ from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
-    RegisterEventHandler,
     SetEnvironmentVariable,
 )
 from launch.conditions import IfCondition, UnlessCondition
-from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
@@ -31,7 +30,6 @@ from launch_ros.parameter_descriptions import ParameterValue
 def generate_launch_description() -> LaunchDescription:
     """Build the launch description."""
     share = get_package_share_directory('franka_description')
-    controller_share = get_package_share_directory('franka_controller')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
     xacro_file = os.path.join(share, 'urdf', 'panda.urdf.xacro')
@@ -129,17 +127,6 @@ def generate_launch_description() -> LaunchDescription:
         arguments=['-topic', 'robot_description', '-name', 'panda'],
     )
 
-    controller_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(controller_share, 'launch', 'controller.launch.py')
-        ),
-        launch_arguments={'hand': hand}.items(),
-    )
-
-    load_controllers = RegisterEventHandler(
-        OnProcessExit(target_action=spawn_entity, on_exit=controller_launch),
-    )
-
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -161,7 +148,6 @@ def generate_launch_description() -> LaunchDescription:
             clock_bridge,
             robot_state_publisher,
             spawn_entity,
-            load_controllers,
             rviz_node,
         ]
     )

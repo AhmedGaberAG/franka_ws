@@ -119,10 +119,10 @@ source install/setup.bash
 # Stage 1 – inspect the model without a simulator
 ros2 launch franka_description visualize_panda.launch.py
 
-# Stage 2+ – spawned in Gazebo Sim with the controllers running
+# Stage 2 – spawn the model in Gazebo Sim
 ros2 launch franka_description gazebo.launch.py
 
-# Controllers for an already running controller manager
+# Stage 3 – load the controllers into the running controller manager
 ros2 launch franka_controller controller.launch.py
 
 # Stage 5+ – motion planning
@@ -134,8 +134,8 @@ ros2 launch franka_moveit moveit.launch.py
 
 `gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
 The Gazebo flavour is detected from `ROS_DISTRO`: Ignition on Humble, and gz
-with the Bullet Featherstone engine on Iron and newer.  It includes
-`controller.launch.py` once the model has been spawned.
+with the Bullet Featherstone engine on Iron and newer.  It does not load any
+controllers: run `controller.launch.py` in a second terminal afterwards.
 
 `controller.launch.py` accepts `controller_manager`, `timeout` and `hand`.
 
