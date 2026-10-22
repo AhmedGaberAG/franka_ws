@@ -55,8 +55,9 @@ def generate_launch_description() -> LaunchDescription:
         ),
         DeclareLaunchArgument('hand', default_value='true',
                               description='Plan with the Franka hand attached.'),
-        DeclareLaunchArgument('rviz', default_value='true',
-                              description='Start RViz with the MotionPlanning display.'),
+        DeclareLaunchArgument(
+            'rviz', default_value='true',
+            description='Start RViz with the MotionPlanning display.'),
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='true',
@@ -100,7 +101,7 @@ def generate_launch_description() -> LaunchDescription:
         'trajectory_execution': {
             'allowed_execution_duration_scaling': 1.2,
             'allowed_goal_duration_margin': 0.5,
-            'allowed_start_tolerance': 0.01,
+            'allowed_start_tolerance': 0.05,
         },
     }]
 

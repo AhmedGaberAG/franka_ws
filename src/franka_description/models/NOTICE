@@ -1,0 +1,18 @@
+Industrial warehouse assets
+===========================
+
+Source: Gazebo Fuel, OpenRobotics / industrial-warehouse
+World:  https://fuel.gazebosim.org/1.0/OpenRobotics/worlds/industrial-warehouse
+Models: https://fuel.gazebosim.org/1.0/OpenRobotics/models/<model>
+
+The following models were downloaded from Gazebo Fuel and are licensed under
+Creative Commons Attribution 4.0 International (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/
+
+  aws_robomaker_warehouse_Bucket_01
+  aws_robomaker_warehouse_PalletJackB_01
+  aws_robomaker_warehouse_ShelfD_01
+  aws_robomaker_warehouse_ShelfE_01
+
+Thumbnails and Fuel metadata files were removed.  The model geometry,
+materials and configuration are otherwise unmodified.

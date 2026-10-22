@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="warehouse">
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="ignition-gazebo-physics-system"
+            name="gz::sim::systems::Physics"/>
+    <plugin filename="ignition-gazebo-user-commands-system"
+            name="gz::sim::systems::UserCommands"/>
+    <plugin filename="ignition-gazebo-scene-broadcaster-system"
+            name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="ignition-gazebo-contact-system"
+            name="gz::sim::systems::Contact"/>
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 12 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.4 0.2 -0.9</direction>
+    </light>
+    <light type="point" name="ceiling_light_center">
+      <pose>0 0 4.8 0 0 0</pose>
+      <diffuse>0.9 0.9 0.85 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <attenuation><range>20</range><constant>0.5</constant><linear>0.02</linear><quadratic>0.001</quadratic></attenuation>
+    </light>
+    <light type="point" name="ceiling_light_west">
+      <pose>-5 0 4.8 0 0 0</pose>
+      <diffuse>0.8 0.8 0.78 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation><range>18</range><constant>0.5</constant><linear>0.02</linear><quadratic>0.001</quadratic></attenuation>
+    </light>
+    <light type="point" name="ceiling_light_east">
+      <pose>5 0 4.8 0 0 0</pose>
+      <diffuse>0.8 0.8 0.78 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation><range>18</range><constant>0.5</constant><linear>0.02</linear><quadratic>0.001</quadratic></attenuation>
+    </light>
+
+    <!-- Concrete floor -->
+    <model name="warehouse_floor">
+      <static>true</static>
+      <pose>0 0 -0.05 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>18 12 0.10</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>18 12 0.10</size></box></geometry>
+          <material><ambient>0.42 0.43 0.44 1</ambient><diffuse>0.56 0.57 0.58 1</diffuse><specular>0.15 0.15 0.15 1</specular></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Perimeter walls, with a 4 m loading door in the south wall -->
+    <model name="wall_north">
+      <static>true</static>
+      <pose>0 5.9 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>18 0.2 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>18 0.2 3.0</size></box></geometry>
+          <material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.70 0.73 0.76 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_south_left">
+      <static>true</static>
+      <pose>-5.5 -5.9 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7 0.2 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7 0.2 3.0</size></box></geometry>
+          <material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.70 0.73 0.76 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_south_right">
+      <static>true</static>
+      <pose>5.5 -5.9 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>7 0.2 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>7 0.2 3.0</size></box></geometry>
+          <material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.70 0.73 0.76 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="loading_door_header">
+      <static>true</static>
+      <pose>0 -5.9 2.65 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>4 0.2 0.70</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>4 0.2 0.70</size></box></geometry>
+          <material><ambient>0.25 0.27 0.30 1</ambient><diffuse>0.38 0.40 0.43 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_west">
+      <static>true</static>
+      <pose>-8.9 0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.2 12 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 12 3.0</size></box></geometry>
+          <material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.70 0.73 0.76 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_east">
+      <static>true</static>
+      <pose>8.9 0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.2 12 3.0</size></box></geometry></collision>
+        <visual name="visual">
+          <geometry><box><size>0.2 12 3.0</size></box></geometry>
+          <material><ambient>0.55 0.58 0.62 1</ambient><diffuse>0.70 0.73 0.76 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Columns and safety baseboards -->
+    <model name="column_1">
+      <static>true</static><pose>-4.5 3.0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 0.35 3.0</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.35 0.35 3.0</size></box></geometry><material><ambient>0.50 0.52 0.55 1</ambient><diffuse>0.66 0.68 0.70 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="column_2">
+      <static>true</static><pose>4.5 3.0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 0.35 3.0</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.35 0.35 3.0</size></box></geometry><material><ambient>0.50 0.52 0.55 1</ambient><diffuse>0.66 0.68 0.70 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="column_3">
+      <static>true</static><pose>-4.5 -3.0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 0.35 3.0</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.35 0.35 3.0</size></box></geometry><material><ambient>0.50 0.52 0.55 1</ambient><diffuse>0.66 0.68 0.70 1</diffuse></material></visual>
+      </link>
+    </model>
+    <model name="column_4">
+      <static>true</static><pose>4.5 -3.0 1.5 0 0 0</pose>
+      <link name="link">
+        <collision name="collision"><geometry><box><size>0.35 0.35 3.0</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.35 0.35 3.0</size></box></geometry><material><ambient>0.50 0.52 0.55 1</ambient><diffuse>0.66 0.68 0.70 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Shelving and warehouse props -->
+    <include>
+      <uri>model://aws_robomaker_warehouse_ShelfE_01</uri>
+      <name>shelf_west_north</name>
+      <pose>-6.7 2.8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_ShelfE_01</uri>
+      <name>shelf_west_south</name>
+      <pose>-6.7 -2.8 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_ShelfD_01</uri>
+      <name>shelf_east_north</name>
+      <pose>6.7 2.8 0 0 0 3.1416</pose>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_ShelfD_01</uri>
+      <name>shelf_east_south</name>
+      <pose>6.7 -2.8 0 0 0 3.1416</pose>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_PalletJackB_01</uri>
+      <name>pallet_jack</name>
+      <pose>5.6 4.9 0.03 0 0 -1.5708</pose>
+      <static>true</static>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_Bucket_01</uri>
+      <name>bucket_west</name>
+      <pose>-7.7 0.3 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://aws_robomaker_warehouse_Bucket_01</uri>
+      <name>bucket_east</name>
+      <pose>7.7 -0.3 0 0 0 0.8</pose>
+    </include>
+    <include>
+      <uri>model://barrel</uri>
+      <name>barrel_1</name>
+      <pose>7.6 1.1 0.425 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://barrel</uri>
+      <name>barrel_2</name>
+      <pose>7.6 0.1 0.425 0 0 0</pose>
+    </include>
+
+    <!-- Sorting conveyor: belt top at z = 0.59, cubes travel towards -X -->
+    <include>
+      <uri>model://conveyor</uri>
+      <name>conveyor</name>
+      <pose>2.4 0 0.55 0 0 0</pose>
+    </include>
+
+    <!-- Coloured cubes, pre-loaded in a shuffled order -->
+    <include><uri>model://cube_blue</uri><name>cube_1_blue</name><pose>3.85 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_green</uri><name>cube_2_green</name><pose>3.45 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_red</uri><name>cube_3_red</name><pose>3.05 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_green</uri><name>cube_4_green</name><pose>2.65 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_blue</uri><name>cube_5_blue</name><pose>2.25 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_red</uri><name>cube_6_red</name><pose>1.85 0 0.64 0 0 3.14159</pose></include>
+    <include><uri>model://cube_green</uri><name>cube_7_green</name><pose>1.45 0 0.64 0 0 3.14159</pose></include>
+
+    <!-- Colour-matched pick-and-place bins in front of the Panda -->
+    <include><uri>model://bin_green</uri><name>bin_green</name><pose>0.38 -0.36 0 0 0 0</pose></include>
+    <include><uri>model://bin_red</uri><name>bin_red</name><pose>0.38 0 0 0 0 0</pose></include>
+    <include><uri>model://bin_blue</uri><name>bin_blue</name><pose>0.38 0.36 0 0 0 0</pose></include>
+
+    <!-- Overhead RGB camera for colour detection at the pick station -->
+    <include>
+      <uri>model://detection_camera</uri>
+      <name>detection_camera</name>
+      <pose>0.95 0 1.55 0 1.2 0</pose>
+    </include>
+  </world>
+</sdf>

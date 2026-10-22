@@ -8,8 +8,13 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch meshes urdf rviz
+  DIRECTORY launch meshes models urdf rviz worlds
   DESTINATION share/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS scripts/conveyor_control.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

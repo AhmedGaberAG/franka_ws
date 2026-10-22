@@ -3,11 +3,6 @@
 Simulation and manipulation stack for the **Franka Emika Panda** 7-DoF arm, built with
 **ROS 2 (Humble)**, **URDF/Xacro**, **Gazebo**, **ros2_control** and **MoveIt 2**.
 
-The workspace is developed **incrementally**: each stage below is implemented, built and
-verified before the next one is started.
-
-## Preview
-
 | Franka Emika Panda | Model in RViz |
 | :---: | :---: |
 | ![Franka Emika Panda](media/panda_real.jpg) | ![Panda URDF in RViz](media/panda_rviz.png) |
@@ -18,38 +13,55 @@ The RViz screenshot shows the generated model at the ready pose.
 
 ---
 
-## 1. Status
+## Quick start
 
-| Stage | Description | State |
-| :--- | :--- | :--- |
-| 0 | Workspace scaffolding, README, `.gitignore` | **Done** |
-| 1 | Robot description (URDF/Xacro + meshes) | **Done** |
-| 2 | Gazebo Sim + `ros2_control` hardware interface | **Done** |
-| 3 | Controllers (joint trajectory, gripper) | **Done** |
-| 4 | RViz / `robot_state_publisher` visualisation | **Done** |
-| 5 | MoveIt 2 configuration (SRDF, kinematics, planners, MotionPlanning) | **Done** |
-| 6 | Manipulation task nodes (e.g. pick & place) | Planned |
-| 7 | Integration tests + CI | Planned |
+```bash
+cd ~/franka_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install      # first time: rosdep install --from-paths src --ignore-src -r -y
+source install/setup.bash
+
+# Whole stack: Gazebo + controllers + MoveIt (RViz)
+ros2 launch franka_bringup bringup.launch.py
+
+# Headless (no Gazebo GUI, no RViz)
+ros2 launch franka_bringup bringup.launch.py use_gazebo_gui:=false rviz:=false
+```
+
+| Goal | Command |
+| :--- | :--- |
+| Inspect the model (no simulator) | `ros2 launch franka_description display.launch.py` |
+| Gazebo only | `ros2 launch franka_description gazebo.launch.py` |
+| Load controllers | `ros2 launch franka_controller controller.launch.py` |
+| MoveIt planning only | `ros2 launch franka_moveit moveit.launch.py` |
+| Full stack | `ros2 launch franka_bringup bringup.launch.py` |
+| Pause / resume belt | `ros2 topic pub --once /conveyor/pause std_msgs/msg/Bool '{data: true}'` |
+
+Handy diagnostics:
+
+```bash
+ros2 control list_controllers
+ros2 topic echo /joint_states
+ros2 topic list | grep detection_camera
+ros2 action list | grep -E "move_action|gripper_cmd"
+```
 
 ---
 
-## 2. Environment
+## Environment
 
 Verified on the development machine:
 
-| Component | Version | Notes |
-| :--- | :--- | :--- |
-| OS | Ubuntu 22.04 (Jammy) | Linux 6.8 |
-| ROS 2 | Humble Hawksbill | `/opt/ros/humble` |
-| Python | 3.10.12 | |
-| Gazebo | Sim 6.18 (Ignition Fortress) | `ros_gz_sim`, `ign_ros2_control` |
-| ros2_control | 2.54.3 | `controller_manager`, `ros2_controllers` |
-| MoveIt 2 | 2.5.10 | `ros-humble-moveit` (via apt) |
-| Robot description | local `franka_description` 0.1.0 | original URDF/Xacro, Panda meshes (Apache-2.0) |
-| Controllers | local `franka_controller` 0.1.0 | `controllers.yaml` and controller spawners |
-| Motion planning | local `franka_moveit` 0.1.0 | SRDF, KDL, OMPL, MoveIt controllers |
+| Component | Version |
+| :--- | :--- |
+| OS | Ubuntu 22.04 (Jammy) |
+| ROS 2 | Humble Hawksbill (`/opt/ros/humble`) |
+| Gazebo | Sim 6.18 (Ignition Fortress); `ros_gz_sim`, `ign_ros2_control` |
+| ros2_control | 2.54.3 |
+| MoveIt 2 | 2.5.10 |
+| Local packages | `franka_description`, `franka_controller`, `franka_moveit`, `franka_bringup` |
 
-### 2.1 Dependencies to install
+### Dependencies
 
 ```bash
 sudo apt update
@@ -64,103 +76,111 @@ sudo apt install \
 ```
 
 > The workspace ships its own `franka_description`, `franka_controller` and
-> `franka_moveit` packages.  `ros-humble-moveit` provides the MoveIt binaries;
-> the Panda configuration itself is local.  Do **not** install
-> `ros-humble-franka-description` alongside `franka_description`: both
-> provide the same ament resource name and the overlay would shadow one of them.  Only the Panda meshes come from Franka Robotics (Apache-2.0); the
-> URDF/Xacro, kinematics, controllers and launch files are reimplemented here,
-> which keeps the model drop-in compatible with upstream while remaining easy
-> to extend (payloads, camera mounts, additional grippers).
+> `franka_moveit`. Do **not** install `ros-humble-franka-description` alongside
+> `franka_description` — both provide the same ament resource name and the
+> overlay would shadow one of them. Only the Panda meshes come from Franka
+> Robotics (Apache-2.0); the URDF/Xacro, kinematics, controllers and launch
+> files are reimplemented here.
 
 ---
 
-## 3. Workspace layout
+## Workspace layout
 
 ```
 franka_ws/
-├── LICENSE
-├── README.md
-├── media/                      # README images
+├── media/                                  # README images
 └── src/
+    ├── franka_bringup/launch/bringup.launch.py   # Gazebo + controllers + MoveIt
     ├── franka_controller/
-    │   ├── config/controllers.yaml      # controller types and parameters
-    │   └── launch/controller.launch.py  # spawners for an existing manager
+    │   ├── config/controllers.yaml               # controller types and parameters
+    │   └── launch/controller.launch.py           # spawners for an existing manager
     ├── franka_description/
-    │   ├── urdf/                        # Xacro macros, ros2_control, Gazebo
-    │   ├── launch/                      # RViz and Gazebo launch files
-    │   ├── meshes/                      # visual and collision meshes
-    │   └── rviz/panda.rviz              # RViz layout
+    │   ├── urdf/                                 # Xacro macros, ros2_control, Gazebo
+    │   ├── launch/                               # display + gazebo launch files
+    │   ├── scripts/conveyor_control.py           # belt stop/resume logic
+    │   ├── meshes/                               # visual and collision meshes
+    │   ├── models/                               # conveyor, cubes, bins, camera, shelves
+    │   ├── worlds/warehouse.world                # warehouse + conveyor cell
+    │   └── rviz/panda.rviz
     └── franka_moveit/
-        ├── config/                      # SRDF, KDL, limits, controllers, OMPL
-        └── launch/moveit.launch.py      # move_group + MotionPlanning
+        ├── config/                               # SRDF, KDL, limits, controllers, OMPL
+        └── launch/moveit.launch.py               # move_group + MotionPlanning
 ```
 
-The packages are layered: the description knows nothing about controllers, and
-the controllers know nothing about planning.  The same description can drive
-Gazebo, MoveIt or real hardware.  `franka_manipulation` (Stage 6) is planned.
+The packages are layered: the description knows nothing about controllers, the
+controllers know nothing about planning, and `franka_bringup` only composes
+them. The same description can drive Gazebo, MoveIt or real hardware.
 
-**Naming conventions**
-
-- Packages: `franka_<domain>`
-- Namespaces: `/franka`
-- Frames: `world` (optional fixed base), `panda_link0` … `panda_link8`, `panda_hand`, `panda_hand_tcp`, `panda_grasp_frame`
-- Controllers: `panda_arm_controller` (joint trajectory), `panda_hand_controller` (gripper)
+**Conventions** — packages `franka_<domain>`; namespace `/franka`; frames
+`panda_link0`…`panda_link8`, `panda_hand`, `panda_hand_tcp`, `panda_grasp_frame`;
+controllers `panda_arm_controller` (joint trajectory) and `panda_hand_controller`
+(gripper).
 
 ---
 
-## 4. Build & run
+## Launch files
 
-### 4.1 Build
+| File | Starts | Key arguments |
+| :--- | :--- | :--- |
+| `franka_description/display.launch.py` | RViz + `robot_state_publisher` (no sim) | `prefix`, `hand`, `with_sc`, `gui`, `rviz`, `use_sim_time` |
+| `franka_description/gazebo.launch.py` | Gazebo world, bridges, spawns the Panda | `world_name`, `use_gazebo_gui`, `use_sim_time`, `rviz`, `hand`, `with_sc` |
+| `franka_controller/controller.launch.py` | Controller spawners | `controller_manager`, `timeout`, `hand` |
+| `franka_moveit/moveit.launch.py` | `move_group` + MotionPlanning | `rviz`, `hand`, `use_sim_time` |
+| `franka_bringup/bringup.launch.py` | All of the above | `world_name`, `use_gazebo_gui`, `rviz`, `hand`, `with_sc`, `use_sim_time` |
+
+`gazebo.launch.py` loads `worlds/<world_name>.world` and detects the Gazebo
+flavour from `ROS_DISTRO` (Ignition on Humble; gz with the Bullet Featherstone
+engine on Iron+). It starts no controllers — run `controller.launch.py`
+afterwards in a second terminal. `moveit.launch.py` also starts no robot, TF or
+controllers; it connects to the running stack with `moveit_manage_controllers:
+false` so the spawners stay in charge.
+
+---
+
+## The warehouse world
+
+The default `warehouse` world is a walled warehouse containing:
+
+- a **conveyor cell**: a 3.6 m belt, seven shuffled green/red/blue cubes that
+  advance to the pick station, three colour-matched bins, and an overhead RGB
+  detection camera;
+- warehouse set dressing: columns, four shelving units, barrels, buckets and a
+  pallet jack.
+
+The Panda spawns at the origin in front of the belt.
+
+### Conveyor cell
+
+The belt is static geometry; cube motion is driven by a `TrajectoryFollower`
+plugin in each cube model because the Fortress DART engine here lacks the
+contact-surface customisation `TrackController` needs. All cube followers share
+one pause topic, `/conveyor/pause`. The `conveyor_control` node watches the
+Gazebo pose stream and:
+
+- **pauses** the belt when the frontmost on-belt cube reaches `x ≈ 0.7 m`;
+- **resumes** once that cube is lifted or removed from the belt.
+
+So the feed stops at the pick station and advances the next cube only after the
+front one is picked. To command the belt manually (e.g. before grasping):
 
 ```bash
-cd ~/franka_ws
-source /opt/ros/humble/setup.bash
-rosdep install --from-paths src --ignore-src -r -y   # first time only
-colcon build --symlink-install
-source install/setup.bash
+ros2 topic pub --once /conveyor/pause std_msgs/msg/Bool '{data: true}'   # stop
+ros2 topic pub --once /conveyor/pause std_msgs/msg/Bool '{data: false}'  # run
 ```
 
-### 4.2 Run
+Camera topics (raw Gazebo transport):
 
 ```bash
-source install/setup.bash
-
-# Stage 1 – inspect the model without a simulator
-ros2 launch franka_description display.launch.py
-
-# Stage 2 – spawn the model in Gazebo Sim
-ros2 launch franka_description gazebo.launch.py
-
-# Stage 3 – load the controllers into the running controller manager
-ros2 launch franka_controller controller.launch.py
-
-# Stage 5 – motion planning (run after the two launches above)
-ros2 launch franka_moveit moveit.launch.py
+ign topic -l | grep detection_camera
+# /detection_camera/image
+# /detection_camera/camera_info
 ```
 
-For MoveIt, keep Gazebo and the controllers running in two terminals and start
-`moveit.launch.py` in a third one.  It starts `move_group` plus RViz with the
-MotionPlanning display; add `rviz:=false` for a headless run.  Other arguments
-are `prefix` (the SRDF assumes the default empty prefix), `hand` and
-`use_sim_time`.
+---
 
-`display.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui`, `rviz`
-and `use_sim_time`, e.g. `hand:=false gui:=false`.
+## Control the robot
 
-`gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
-The Gazebo flavour is detected from `ROS_DISTRO`: Ignition on Humble, and gz
-with the Bullet Featherstone engine on Iron and newer.  It does not load any
-controllers: run `controller.launch.py` in a second terminal afterwards.
-
-`controller.launch.py` accepts `controller_manager`, `timeout` and `hand`.
-
-`moveit.launch.py` does **not** start the robot, TF or controllers: it connects
-to the already running stack, with `moveit_manage_controllers: false` so that
-the spawners stay in charge of the controllers.
-
-### 4.3 Control the robot
-
-With the controllers active, send a joint trajectory to the arm:
+Send a joint trajectory to the arm:
 
 ```bash
 ros2 action send_goal /panda_arm_controller/follow_joint_trajectory \
@@ -168,7 +188,7 @@ ros2 action send_goal /panda_arm_controller/follow_joint_trajectory \
   "{trajectory: {joint_names: [panda_joint1, panda_joint2, panda_joint3, panda_joint4, panda_joint5, panda_joint6, panda_joint7], points: [{positions: [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785], time_from_start: {sec: 3}}]}}"
 ```
 
-and open or close the gripper (position in metres):
+Open or close the gripper (position in metres):
 
 ```bash
 ros2 action send_goal /panda_hand_controller/gripper_cmd \
@@ -176,61 +196,49 @@ ros2 action send_goal /panda_hand_controller/gripper_cmd \
   "{command: {position: 0.04, max_effort: 10.0}}"
 ```
 
-### 4.4 Plan and execute with MoveIt
+### Plan and execute with MoveIt
 
 With all three launches running, use the **MotionPlanning** panel in RViz:
 
 1. Select the planning group `panda_arm`.
-2. Choose a goal state (`ready`, `extended`, `transport`) or drag the
-   interactive marker.
+2. Choose a goal state (`ready`, `extended`, `transport`) or drag the marker.
 3. Press **Plan**, inspect the trajectory, then **Plan & Execute**.
 
-The SRDF also defines the `panda_hand` and `panda_arm_hand` groups, and the
-gripper opens/closes through `panda_hand_controller`.  Collision checking uses
-the STL meshes; no octomap sensors are configured, so move_group logs
-`No 3D sensor plugin(s) defined` once at startup — this is expected.
+The SRDF also defines the `panda_hand` and `panda_arm_hand` groups; the gripper
+opens/closes through `panda_hand_controller`. Collision checking uses the STL
+meshes; no octomap sensors are configured, so move_group logs
+`No 3D sensor plugin(s) defined` once — this is expected.
 
 ---
 
-## 5. Development workflow
+## Development workflow
 
-1. Branch off `main` with a descriptive name (`feature/moveit-config`, `fix/gripper-joint-limits`).
-2. Build with `colcon build --symlink-install --packages-select <pkg>` while iterating.
-3. Lint: `ament_uncrustify`, `ament_clang_format`, `ament_cpplint` (added in Stage 7).
-4. Commit small, logically scoped changes; run a build + smoke test before pushing.
+1. Branch off `main` with a descriptive name (`feature/moveit-config`).
+2. Iterate with `colcon build --symlink-install --packages-select <pkg>`.
+3. Lint: `ament_uncrustify`, `ament_clang_format`, `ament_cpplint`.
+4. Commit small, logically scoped changes; build + smoke test before pushing.
 
 ---
 
-## 6. Troubleshooting
+## Troubleshooting
 
 | Symptom | Likely cause / fix |
 | :--- | :--- |
-| `Package 'franka_...' not found` | `source /opt/ros/humble/setup.bash` **and** `source install/setup.bash` |
-| Gazebo opens blank / errors on meshes | make sure the package is sourced, `package://` URIs are resolved from the ament index |
-| Gazebo Sim rejects the model | check `gz sim` output; the usual cause is an invalid inertia tensor or a missing plugin |
-| `ros2_control` controller fails to activate | `controller_manager` did not load the hardware plugin — check the `<ros2_control>` tag and `robot_description` remapping |
-| `No controllers are currently loaded` | `gazebo.launch.py` does not start any; run `ros2 launch franka_controller controller.launch.py` |
-| Spawner cannot contact `/controller_manager` | the model has not been spawned yet — start Gazebo first or raise `timeout:=` |
-| RViz shows a broken robot | `robot_state_publisher` is not publishing TF; run `ros2 run tf2_tools view_frames` to inspect |
-| MoveIt says "no kinematics solver" | `kinematics.yaml` is missing or the group name does not match the SRDF group |
-| move_group starts but has no controllers | start `controller.launch.py` first and check `ros2 control list_controllers`; action names must match `moveit_controllers.yaml` |
-| RViz reports `/recognize_objects not available` | harmless: the perception capability is not loaded, planning still works |
-| `No 3D sensor plugin(s) defined` | expected: this configuration has no octomap/camera plugin |
+| `Package 'franka_...' not found` | source `/opt/ros/humble/setup.bash` **and** `install/setup.bash` |
+| Gazebo blank / mesh errors | source the workspace; `package://` resolves from the ament index |
+| Gazebo rejects the model | check `gz sim` output — usually an invalid inertia or missing plugin |
+| `No controllers are currently loaded` | `gazebo.launch.py` starts none; run `controller.launch.py` |
+| Spawner can't reach `/controller_manager` | model not spawned yet — start Gazebo first or raise `timeout:=` |
+| RViz shows a broken robot | `robot_state_publisher` not publishing TF; check with `ros2 run tf2_tools view_frames` |
+| move_group has no controllers | start `controller.launch.py`; action names must match `moveit_controllers.yaml` |
+| `model://` assets not found | source the workspace; `gazebo.launch.py` sets `GZ_SIM_RESOURCE_PATH` |
 | `colcon build` fails on a stale package | `rm -rf build install log` and rebuild |
-
-Useful diagnostics:
-
-```bash
-ros2 pkg list | grep franka
-ros2 control list_hardware_components
-ros2 control list_controllers
-ros2 topic list
-ros2 topic echo /joint_states
-```
+| `No 3D sensor plugin(s) defined` | expected — no octomap/camera plugin configured |
+| `libEGL warning: egl: failed to create dri2 screen` | harmless in headless / no-GPU environments |
 
 ---
 
-## 7. References
+## References
 
 - [Franka Emika Panda documentation](https://frankaemika.github.io/docs/)
 - [MoveIt 2 tutorials](https://moveit.picknik.ai/main/index.html)
@@ -240,18 +248,23 @@ ros2 topic echo /joint_states
 
 ---
 
-## 8. License
+## License
 
 The code, URDF/Xacro files, launch files and documentation in this repository
 are released under the [MIT License](LICENSE).
 
 Third-party assets keep their original licenses:
 
-- **Meshes** — `src/franka_description/meshes/` contains the Franka Emika Panda
-  visual and collision meshes, Copyright 2023 Franka Robotics GmbH, obtained
-  from [frankarobotics/franka_ros2](https://github.com/frankarobotics/franka_ros2)
-  and licensed under the [Apache License 2.0](src/franka_description/meshes/LICENSE).
-  The files are redistributed unmodified; see [NOTICE](NOTICE) and
-  [`meshes/NOTICE`](src/franka_description/meshes/NOTICE).
-- **Preview photo** — `media/panda_real.jpg` by *Ims*, licensed under
+- **Meshes** — `src/franka_description/meshes/` are the Franka Emika Panda
+  meshes, Copyright 2023 Franka Robotics GmbH, from
+  [frankarobotics/franka_ros2](https://github.com/frankarobotics/franka_ros2),
+  licensed under [Apache 2.0](src/franka_description/meshes/LICENSE). See
+  [NOTICE](NOTICE) and [`meshes/NOTICE`](src/franka_description/meshes/NOTICE).
+- **Preview photo** — `media/panda_real.jpg` by *Ims*,
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- **Warehouse props** — the `aws_robomaker_warehouse_*` shelf, pallet-jack and
+  bucket models under `src/franka_description/models/` come from the
+  [OpenRobotics industrial-warehouse world](https://fuel.gazebosim.org/1.0/OpenRobotics/worlds/industrial-warehouse)
+  on Gazebo Fuel, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/);
+  redistributed unmodified apart from removed thumbnails and metadata. The
+  warehouse world, conveyor, cubes, bins and camera are original assets.

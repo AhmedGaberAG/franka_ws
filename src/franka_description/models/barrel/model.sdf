@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="barrel">
+    <link name="link">
+      <inertial>
+        <mass>20</mass>
+        <inertia>
+          <ixx>1.5167</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>1.5167</iyy><iyz>0</iyz><izz>0.625</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.25</radius><length>0.85</length></cylinder></geometry>
+        <surface><friction><ode><mu>0.9</mu><mu2>0.9</mu2></ode></friction></surface>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.25</radius><length>0.85</length></cylinder></geometry>
+        <material><ambient>0.06 0.20 0.55 1</ambient><diffuse>0.10 0.30 0.80 1</diffuse><specular>0.5 0.5 0.5 1</specular></material>
+      </visual>
+      <visual name="rim_top">
+        <pose>0 0 0.36 0 0 0</pose>
+        <geometry><cylinder><radius>0.255</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="rim_bottom">
+        <pose>0 0 -0.36 0 0 0</pose>
+        <geometry><cylinder><radius>0.255</radius><length>0.04</length></cylinder></geometry>
+        <material><ambient>0.4 0.4 0.4 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>
