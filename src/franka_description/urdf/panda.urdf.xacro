@@ -16,11 +16,11 @@
   <!-- Emit the coarse self-collision companion links. -->
   <xacro:arg name="with_sc" default="true"/>
 
-  <!-- Emit ros2_control hardware + Gazebo plugins. -->
-  <xacro:arg name="is_sim" default="true"/>
-
-  <!-- true: Ignition / Gazebo Sim 6 (Humble).  false: gz / Gazebo Sim 7+. -->
+  <!-- Start GZ or Ignition depending on ROS 2 version -->
   <xacro:arg name="is_ignition" default="true"/>
+
+  <!-- Load simulated or real hardware interfaces -->
+  <xacro:arg name="is_sim" default="true"/>
 
   <!-- Hand-mounted camera and the Gazebo sensors system. -->
   <xacro:arg name="sensors" default="false"/>

@@ -7,7 +7,7 @@ Examples
 --------
     ros2 launch franka_description gazebo.launch.py
     ros2 launch franka_description gazebo.launch.py gui:=false rviz:=true
-    ros2 launch franka_description gazebo.launch.py is_ignition:=false gz_version:=7
+    ROS_DISTRO=iron ros2 launch franka_description gazebo.launch.py
 """
 
 import os
@@ -47,11 +47,17 @@ def generate_launch_description() -> LaunchDescription:
         SetEnvironmentVariable('IGN_GAZEBO_RESOURCE_PATH', resource_path),
     ]
 
+    ros_distro = os.environ.get('ROS_DISTRO', 'humble')
+    is_ignition = 'True' if ros_distro == 'humble' else 'False'
+    gz_version = {'humble': '6', 'iron': '7', 'jazzy': '8'}.get(ros_distro, '9')
+    physics_engine = (
+        '' if ros_distro == 'humble'
+        else '--physics-engine gz-physics-bullet-featherstone-plugin'
+    )
+
     world = LaunchConfiguration('world')
     gui = LaunchConfiguration('gui')
     rviz = LaunchConfiguration('rviz')
-    gz_version = LaunchConfiguration('gz_version')
-    is_ignition = LaunchConfiguration('is_ignition')
     hand = LaunchConfiguration('hand')
     with_sc = LaunchConfiguration('with_sc')
 
@@ -65,13 +71,6 @@ def generate_launch_description() -> LaunchDescription:
                               description='Run the Gazebo client.'),
         DeclareLaunchArgument('rviz', default_value='false',
                               description='Run RViz alongside Gazebo.'),
-        DeclareLaunchArgument('gz_version', default_value='6',
-                              description='Gazebo Sim major version.'),
-        DeclareLaunchArgument(
-            'is_ignition',
-            default_value='true',
-            description='true for Ignition (Humble), false for gz (Iron+).',
-        ),
         DeclareLaunchArgument('hand', default_value='true',
                               description='Attach the Franka hand to the flange.'),
         DeclareLaunchArgument(
@@ -99,7 +98,7 @@ def generate_launch_description() -> LaunchDescription:
                 os.path.join(ros_gz_sim_share, 'launch', 'gz_sim.launch.py')
             ),
             launch_arguments={
-                'gz_args': ['-r -v 4 ', extra_args, world],
+                'gz_args': ['-r -v 4 ', physics_engine, ' ', extra_args, world],
                 'gz_version': gz_version,
             }.items(),
             condition=condition,
