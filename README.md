@@ -35,6 +35,7 @@ ros2 launch franka_bringup bringup.launch.py use_gazebo_gui:=false rviz:=false
 | Load controllers | `ros2 launch franka_controller controller.launch.py` |
 | MoveIt planning only | `ros2 launch franka_moveit moveit.launch.py` |
 | Full stack | `ros2 launch franka_bringup bringup.launch.py` |
+| Tkinter GUI (arm+gripper+MoveIt) | `ros2 launch franka_utils gui.launch.py` |
 | Pause / resume belt | `ros2 topic pub --once /conveyor/pause std_msgs/msg/Bool '{data: true}'` |
 
 Handy diagnostics:
