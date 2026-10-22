@@ -10,12 +10,12 @@
       <gazebo>
         <xacro:if value="${is_ignition}">
           <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-            <parameters>$(find franka_description)/config/controllers.yaml</parameters>
+            <parameters>$(find franka_controller)/config/controllers.yaml</parameters>
           </plugin>
         </xacro:if>
         <xacro:unless value="${is_ignition}">
           <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-            <parameters>$(find franka_description)/config/controllers.yaml</parameters>
+            <parameters>$(find franka_controller)/config/controllers.yaml</parameters>
           </plugin>
         </xacro:unless>
 

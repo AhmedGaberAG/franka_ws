@@ -1,7 +1,7 @@
 """Spawn the Panda in Gazebo Sim.
 
 Starts Gazebo Sim, publishes the robot description, spawns the model and loads
-the ros2_control controllers through ``ign_ros2_control``.
+the ros2_control controllers from ``franka_controller``.
 
 Examples
 --------
@@ -31,6 +31,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 def generate_launch_description() -> LaunchDescription:
     """Build the launch description."""
     share = get_package_share_directory('franka_description')
+    controller_share = get_package_share_directory('franka_controller')
     ros_gz_sim_share = get_package_share_directory('ros_gz_sim')
 
     xacro_file = os.path.join(share, 'urdf', 'panda.urdf.xacro')
@@ -128,24 +129,15 @@ def generate_launch_description() -> LaunchDescription:
         arguments=['-topic', 'robot_description', '-name', 'panda'],
     )
 
-    spawners = [
-        Node(
-            package='controller_manager',
-            executable='spawner',
-            output='screen',
-            arguments=[
-                controller,
-                '--controller-manager', '/controller_manager',
-                '--controller-manager-timeout', '60',
-            ],
-        )
-        for controller in ('joint_state_broadcaster',
-                           'panda_arm_controller',
-                           'panda_hand_controller')
-    ]
+    controller_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(controller_share, 'launch', 'controller.launch.py')
+        ),
+        launch_arguments={'hand': hand}.items(),
+    )
 
     load_controllers = RegisterEventHandler(
-        OnProcessExit(target_action=spawn_entity, on_exit=spawners),
+        OnProcessExit(target_action=spawn_entity, on_exit=controller_launch),
     )
 
     rviz_node = Node(

@@ -84,7 +84,8 @@ franka_ws/
 ├── README.md
 ├── media/                      # README images
 └── src/
-    └── franka_description/     # URDF/Xacro, meshes, controllers, launch, RViz
+    ├── franka_controller/      # controller configuration and spawners
+    └── franka_description/     # URDF/Xacro, meshes, launch, RViz
 ```
 
 Planned: `franka_moveit` (Stage 5) and `franka_manipulation` (Stage 6).
@@ -121,6 +122,9 @@ ros2 launch franka_description visualize_panda.launch.py
 # Stage 2+ – spawned in Gazebo Sim with the controllers running
 ros2 launch franka_description gazebo.launch.py
 
+# Controllers for an already running controller manager
+ros2 launch franka_controller controller.launch.py
+
 # Stage 5+ – motion planning
 ros2 launch franka_moveit moveit.launch.py
 ```
@@ -130,7 +134,10 @@ ros2 launch franka_moveit moveit.launch.py
 
 `gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
 The Gazebo flavour is detected from `ROS_DISTRO`: Ignition on Humble, and gz
-with the Bullet Featherstone engine on Iron and newer.
+with the Bullet Featherstone engine on Iron and newer.  It includes
+`controller.launch.py` once the model has been spawned.
+
+`controller.launch.py` accepts `controller_manager`, `timeout` and `hand`.
 
 ---
 
