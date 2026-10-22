@@ -1,191 +1,82 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- ========================================================================= -->
-  <!--                                                                           -->
-  <!--  GAZEBO                                                                   -->
-  <!--                                                                           -->
-  <!--  Simulation specific tags.  Two simulators are covered:                 -->
-  <!--                                                                           -->
-  <!--    gazebo   - Gazebo Classic 11 (default on ROS 2 Humble)                -->
-  <!--               plugin: libgazebo_ros2_control.so                          -->
-  <!--                                                                           -->
-  <!--    ignition - Gazebo Fortress / Ignition                                -->
-  <!--               plugin: libign_ros2_control-system.so                      -->
-  <!--                                                                           -->
-  <!--  The <gazebo> plugin block is what loads the ros2_control system        -->
-  <!--  interface into the simulator; the <ros2_control> block in              -->
-  <!--  ros2_control.xacro then advertises the joint interfaces.  Both are     -->
-  <!--  required.                                                               -->
-  <!--                                                                           -->
-  <!-- ========================================================================= -->
+  <!-- Simulation plugins and per-link properties.
+       is_ignition=true  -> Ignition / Gazebo Sim 6 (Humble)
+       is_ignition=false -> gz / Gazebo Sim 7+ (Iron and newer) -->
+  <xacro:macro name="panda_gazebo" params="prefix:='' is_sim:=true is_ignition:=true sensors:=false">
 
-
-  <!-- ========================================================================= -->
-  <!--  Simulation plugins                                                       -->
-  <!-- ========================================================================= -->
-  <xacro:macro name="panda_gazebo_plugins" params="simulator:='gazebo'">
-
-    <!-- Gazebo Classic 11 (ROS 2 Humble default) -->
-    <xacro:if value="${simulator == 'gazebo'}">
+    <xacro:if value="${is_sim}">
       <gazebo>
-        <plugin filename="libgazebo_ros2_control.so"
-                name="gazebo_ros2_control::GazeboSimSystem">
-          <parameters>
-            <robot_namespace>/</robot_namespace>
-          </parameters>
-        </plugin>
+        <xacro:if value="${is_ignition}">
+          <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+            <parameters>$(find franka_description)/config/controllers.yaml</parameters>
+          </plugin>
+        </xacro:if>
+        <xacro:unless value="${is_ignition}">
+          <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+            <parameters>$(find franka_description)/config/controllers.yaml</parameters>
+          </plugin>
+        </xacro:unless>
+
+        <xacro:if value="${sensors}">
+          <xacro:if value="${is_ignition}">
+            <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
+              <render_engine>ogre2</render_engine>
+            </plugin>
+          </xacro:if>
+          <xacro:unless value="${is_ignition}">
+            <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+              <render_engine>ogre2</render_engine>
+            </plugin>
+          </xacro:unless>
+        </xacro:if>
       </gazebo>
+
+      <!-- High friction and many contact points on the finger pads, so grasped
+           objects stay in the gripper. -->
+      <gazebo reference="${prefix}panda_leftfinger">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <maxContacts>10</maxContacts>
+      </gazebo>
+      <gazebo reference="${prefix}panda_rightfinger">
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+        <maxContacts>10</maxContacts>
+      </gazebo>
+
+      <!-- Hand-mounted camera, published on a Gazebo topic. -->
+      <xacro:if value="${sensors}">
+        <gazebo reference="${prefix}panda_hand">
+          <sensor name="panda_hand_camera" type="camera">
+            <pose>0 0 0.05 0 0 0</pose>
+            <always_on>true</always_on>
+            <update_rate>30</update_rate>
+            <camera>
+              <horizontal_fov>1.047</horizontal_fov>
+              <image>
+                <width>640</width>
+                <height>480</height>
+                <format>R8G8B8</format>
+              </image>
+              <clip>
+                <near>0.02</near>
+                <far>10</far>
+              </clip>
+            </camera>
+          </sensor>
+        </gazebo>
+
+        <link name="${prefix}panda_hand_camera_optical_frame"/>
+        <joint name="${prefix}panda_hand_camera_optical_joint" type="fixed">
+          <origin rpy="${-pi/2} 0 ${-pi/2}" xyz="0 0 0.05"/>
+          <parent link="${prefix}panda_hand"/>
+          <child link="${prefix}panda_hand_camera_optical_frame"/>
+        </joint>
+      </xacro:if>
     </xacro:if>
 
-    <!-- Gazebo Fortress / Ignition (ros_gz stack) -->
-    <xacro:if value="${simulator == 'ignition'}">
-      <gazebo>
-        <plugin filename="libign_ros2_control-system.so"
-                name="ign_ros2_control::IgnitionSystem">
-          <parameters>
-            <robot_namespace>/</robot_namespace>
-          </parameters>
-        </plugin>
-      </gazebo>
-    </xacro:if>
-  </xacro:macro>
-
-  <!-- ========================================================================= -->
-  <!--  Per-link simulation properties                                          -->
-  <!-- ========================================================================= -->
-  <xacro:macro name="panda_gazebo_links" params="prefix:=''">
-
-    <!-- The arm is mounted on a world-fixed pedestal; the joints themselves
-         must not self-collide or the solver fights the arm against itself. -->
-    <gazebo reference="${prefix}panda_link0">
-      <selfCollide>false</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
-    </gazebo>
-
-    <gazebo reference="${prefix}panda_link1">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link2">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link3">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link4">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link5">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link6">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-    <gazebo reference="${prefix}panda_link7">
-      <selfCollide>false</selfCollide>
-    </gazebo>
-
-    <!-- The hand and the fingers must be allowed to self-collide, otherwise
-         a grasped object is pushed out of the gripper.  High friction on the
-         finger pads keeps the object in place. -->
-    <gazebo reference="${prefix}panda_hand">
-      <selfCollide>false</selfCollide>
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-    </gazebo>
-
-    <gazebo reference="${prefix}panda_leftfinger">
-      <selfCollide>true</selfCollide>
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <contact>
-        <max_contacts>10</max_contacts>
-        <ode>
-          <max_vel>0</max_vel>
-          <min_depth>0.001</min_depth>
-        </ode>
-      </contact>
-    </gazebo>
-
-    <gazebo reference="${prefix}panda_rightfinger">
-      <selfCollide>true</selfCollide>
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <contact>
-        <max_contacts>10</max_contacts>
-        <ode>
-          <max_vel>0</max_vel>
-          <min_depth>0.001</min_depth>
-        </ode>
-      </contact>
-    </gazebo>
-  </xacro:macro>
-
-  <!-- ========================================================================= -->
-  <!--  Joint-level simulation properties                                       -->
-  <!--                                                                           -->
-  <!--  provideFeedback makes the simulator report external wrenches on the    -->
-  <!--  joints, which ros2_control needs in order to publish effort states.    -->
-  <!-- ========================================================================= -->
-  <xacro:macro name="panda_gazebo_joints" params="prefix:=''">
-    <gazebo reference="${prefix}panda_joint1"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint2"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint3"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint4"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint5"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint6"><provideFeedback>true</provideFeedback></gazebo>
-    <gazebo reference="${prefix}panda_joint7"><provideFeedback>true</provideFeedback></gazebo>
-  </xacro:macro>
-
-  <!-- ========================================================================= -->
-  <!--  Optional hand camera                                                     -->
-  <!--                                                                           -->
-  <!--  Mounted on the hand, looking along the tool axis.  Needed later for   -->
-  <!--  vision based pick and place.  Disabled by default because it costs      -->
-  <!--  rendering performance.                                                  -->
-  <!-- ========================================================================= -->
-  <xacro:macro name="panda_gazebo_camera" params="prefix:='' sensor_name:='panda_hand_camera'">
-    <gazebo reference="${prefix}panda_hand">
-      <sensor name="${sensor_name}" type="camera">
-        <pose>0 0 0.05 0 0 0</pose>
-        <camera>
-          <horizontal_fov>1.047</horizontal_fov>
-          <image>
-            <width>640</width>
-            <height>480</height>
-            <format>R8G8B8</format>
-          </image>
-          <clip>
-            <near>0.02</near>
-            <far>10</far>
-          </clip>
-          <noise>
-            <type>gaussian</type>
-            <mean>0.0</mean>
-            <stddev>0.007</stddev>
-          </noise>
-        </camera>
-        <plugin name="${sensor_name}_controller" filename="libgazebo_ros_camera.so">
-          <always_on>true</always_on>
-          <update_rate>30</update_rate>
-          <camera_name>${sensor_name}</camera_name>
-          <image_topic_name>image_raw</image_topic_name>
-          <camera_info_topic_name>camera_info</camera_info_topic_name>
-          <frame_name>${prefix}panda_hand_camera_optical_frame</frame_name>
-          <hack_baseline>0.0</hack_baseline>
-          <hack_needs_update>true</hack_needs_update>
-        </plugin>
-      </sensor>
-    </gazebo>
-
-    <link name="${prefix}panda_hand_camera_optical_frame"/>
-
-    <joint name="${prefix}panda_hand_camera_optical_joint" type="fixed">
-      <origin rpy="${-pi/2} 0 ${-pi/2}" xyz="0 0 0.05"/>
-      <parent link="${prefix}panda_hand"/>
-      <child link="${prefix}panda_hand_camera_optical_frame"/>
-    </joint>
   </xacro:macro>
 
 </robot>

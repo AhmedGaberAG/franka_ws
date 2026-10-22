@@ -5,9 +5,7 @@
   <version>0.1.0</version>
   <description>
     URDF/Xacro description of the Franka Emika Panda 7-DoF arm with the
-    parallel-jaw hand. The description is split into four focused files:
-    properties (tunable values), panda (links and joints), ros2_control
-    (hardware interface) and gazebo (simulation tags).
+    parallel-jaw hand.
   </description>
   <maintainer email="ahmedmgaber28@gmail.com">Ahmed Gaber</maintainer>
   <license>MIT</license>
@@ -19,6 +17,13 @@
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>joint_state_publisher_gui</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>ign_ros2_control</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>joint_state_broadcaster</exec_depend>
+  <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>gripper_controllers</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
