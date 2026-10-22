@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+  <!-- ========================================================================= -->
+  <!--                                                                           -->
+  <!--  PANDA - URDF ENTRY POINT                                                -->
+  <!--                                                                           -->
+  <!--  This is the file that every other tool points at.  It only declares    -->
+  <!--  the arguments and assembles the four description fragments:            -->
+  <!--                                                                           -->
+  <!--    properties.xacro   tunable values: limits, inertias, materials       -->
+  <!--    panda.xacro        links and joints                                  -->
+  <!--    ros2_control.xacro  hardware interface for the controller manager    -->
+  <!--    gazebo.xacro       simulation tags and plugins                       -->
+  <!--                                                                           -->
+  <!--  Usage:                                                                   -->
+  <!--    xacro franka_description/urdf/panda.urdf.xacro                       -->
+  <!--    xacro ... prefix:=panda1_ hand:=true simulator:=gazebo           -->
+  <!--                                                                           -->
+  <!-- ========================================================================= -->
+
+  <!-- ==========================  ARGUMENTS  ================================= -->
+
+  <!-- Prefix applied to every link and joint name (for multi-robot setups). -->
+  <xacro:arg name="prefix" default=""/>
+
+  <!-- Mount the Franka hand on the flange. -->
+  <xacro:arg name="hand" default="true"/>
+
+  <!-- Name of the hardware interface used by ros2_control. -->
+  <xacro:arg name="hardware" default="gazebo_ros2_control/GazeboSimSystem"/>
+
+  <!-- Which simulator to emit the plugin blocks for: gazebo | ignition. -->
+  <xacro:arg name="simulator" default="gazebo"/>
+
+  <!-- Attach a camera to the hand. -->
+  <xacro:arg name="camera" default="false"/>
+
+  <!-- Attach the robot to the world with a fixed joint (Gazebo only). -->
+  <xacro:arg name="use_world" default="false"/>
+
+  <!-- Emit the coarse "<link>_sc" self-collision companion links. -->
+  <xacro:arg name="with_sc" default="true"/>
+
+  <!-- Pose of the robot base in the world. -->
+  <xacro:arg name="world_xy" default="0 0 0"/>
+  <xacro:arg name="world_rpy" default="0 0 0"/>
+
+  <!-- ==========================  INCLUDES  ================================== -->
+  <xacro:include filename="$(find franka_description)/urdf/properties.xacro"/>
+  <xacro:include filename="$(find franka_description)/urdf/panda.xacro"/>
+  <xacro:include filename="$(find franka_description)/urdf/ros2_control.xacro"/>
+  <xacro:include filename="$(find franka_description)/urdf/gazebo.xacro"/>
+
+  <!-- ==========================  ASSEMBLY  ================================== -->
+
+  <!-- The arm itself. -->
+  <xacro:panda_arm prefix="$(arg prefix)" with_sc="$(arg with_sc)"/>
+
+  <!-- The gripper, mounted on the flange. -->
+  <xacro:if value="$(arg hand)">
+    <xacro:panda_hand prefix="$(arg prefix)"
+                     connected_to="panda_link8"
+                     with_sc="$(arg with_sc)"/>
+  </xacro:if>
+
+  <!-- ros2_control hardware interface. -->
+  <xacro:panda_arm_ros2_control name="panda_arm_system"
+                                 prefix="$(arg prefix)"
+                                 hardware="$(arg hardware)"/>
+
+  <xacro:if value="$(arg hand)">
+    <xacro:panda_hand_ros2_control name="panda_hand_system"
+                                   prefix="$(arg prefix)"
+                                   hardware="$(arg hardware)"/>
+  </xacro:if>
+
+  <!-- Simulation specific tags. -->
+  <xacro:panda_gazebo_plugins simulator="$(arg simulator)"/>
+  <xacro:panda_gazebo_links prefix="$(arg prefix)"/>
+  <xacro:panda_gazebo_joints prefix="$(arg prefix)"/>
+
+  <xacro:if value="$(arg camera)">
+    <xacro:panda_gazebo_camera prefix="$(arg prefix)"/>
+  </xacro:if>
+
+  <!-- Joint that anchors the robot to the world.  Without it the robot falls
+       through the floor because the simulated arm is not self-supporting. -->
+  <xacro:if value="$(arg use_world)">
+    <link name="$(arg prefix)world"/>
+
+    <joint name="$(arg prefix)world_joint" type="fixed">
+      <parent link="$(arg prefix)world"/>
+      <child link="$(arg prefix)panda_link0"/>
+      <origin rpy="$(arg world_rpy)" xyz="$(arg world_xy)"/>
+    </joint>
+  </xacro:if>
+
+</robot>

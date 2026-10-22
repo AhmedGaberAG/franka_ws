@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================================================= -->
+  <!--                                                                           -->
+  <!--  ROS 2 CONTROL                                                            -->
+  <!--                                                                           -->
+  <!--  Describes the hardware interface of the robot to the ros2_control        -->
+  <!--  controller manager.  Two back-ends are supported:                      -->
+  <!--                                                                           -->
+  <!--    gazebo_ros2_control/GazeboSimSystem                                   -->
+  <!--        - Gazebo Classic 11 (the default on ROS 2 Humble)                -->
+  <!--        - real robot: replace with franka_ros2_control/FrankaSystem      -->
+  <!--                                                                           -->
+  <!--    ign_ros2_control/IgnitionSystem                                       -->
+  <!--        - Gazebo Fortress / Ignition (ros_gz / ign_ros2_control)         -->
+  <!--                                                                           -->
+  <!--    mock_components/GenericSystem                                         -->
+  <!--        - no simulation, used for RViz visualisation and MoveIt dry runs  -->
+  <!--                                                                           -->
+  <!--  Every joint exposes position, velocity and effort state interfaces so  -->
+  <!--  that joint_trajectory_controller, effort_controllers and the           -->
+  <!--  joint_state_broadcaster can all be attached.                           -->
+  <!--                                                                           -->
+  <!-- ========================================================================= -->
+
+
+  <!-- ========================================================================= -->
+  <!--  Arm hardware interface                                                   -->
+  <!-- ========================================================================= -->
+  <xacro:macro name="panda_arm_ros2_control" params="name prefix:='' hardware:='gazebo_ros2_control/GazeboSimSystem'">
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>${hardware}</plugin>
+      </hardware>
+
+      <joint name="${prefix}panda_joint1">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint1']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint2">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint2']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint3">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint3']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint4">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint4']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint5">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint5']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint6">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint6']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+
+      <joint name="${prefix}panda_joint7">
+        <command_interface name="position"/>
+        <command_interface name="effort"/>
+        <state_interface name="position">
+          <param name="initial_value">${initial_positions['panda_joint7']}</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+
+  <!-- ========================================================================= -->
+  <!--  Gripper hardware interface                                               -->
+  <!--                                                                           -->
+  <!--  finger_joint2 mimics finger_joint1, so it is declared with the mimic   -->
+  <!--  parameters instead of being commanded directly.                         -->
+  <!-- ========================================================================= -->
+  <xacro:macro name="panda_hand_ros2_control" params="name prefix:='' hardware:='gazebo_ros2_control/GazeboSimSystem'">
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>${hardware}</plugin>
+      </hardware>
+
+      <joint name="${prefix}panda_finger_joint1">
+        <command_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <joint name="${prefix}panda_finger_joint2">
+        <param name="mimic">${prefix}panda_finger_joint1</param>
+        <param name="multiplier">1</param>
+        <command_interface name="position"/>
+        <state_interface name="position">
+          <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
+
+</robot>

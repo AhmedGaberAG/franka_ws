@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================================================= -->
+  <!--                                                                           -->
+  <!--  PANDA - LINKS AND JOINTS                                                -->
+  <!--                                                                           -->
+  <!--  The complete mechanical structure of the Franka Emika Panda:            -->
+  <!--                                                                           -->
+  <!--    panda_link0 -> panda_link1 -> ... -> panda_link7 -> panda_link8        -->
+  <!--    (base)       (joint1)                        (joint7)    (flange)       -->
+  <!--                                                                           -->
+  <!--  followed by the parallel-jaw hand:                                      -->
+  <!--                                                                           -->
+  <!--    panda_link8 -> panda_hand -> panda_leftfinger                         -->
+  <!--                    panda_hand -> panda_rightfinger                      -->
+  <!--                                                                           -->
+  <!--  Every moving link is mirrored by a coarse "<link>_sc" companion link    -->
+  <!--  that carries capsule geometry.  The capsules describe how the real     -->
+  <!--  arm overlaps itself, which is what MoveIt needs for self-collision     -->
+  <!--  checking; the detailed STL meshes are used against the environment.    -->
+  <!--                                                                           -->
+  <!--  Joint origins and axes are the official Franka values.  All limits,     -->
+  <!--  inertias, colours and the safety margin come from properties.xacro.    -->
+  <!--                                                                           -->
+  <!-- ========================================================================= -->
+
+  <!-- ========================================================================= -->
+  <!--  ARM                                                                      -->
+  <!-- ========================================================================= -->
+  <xacro:macro name="panda_arm" params="prefix:='' connected_to:='' xyz:='0 0 0' rpy:='0 0 0' with_sc:=true">
+
+    <!-- Optionally bolt the arm onto another link. -->
+    <xacro:unless value="${connected_to == ''}">
+      <joint name="${prefix}panda_joint_base" type="fixed">
+        <origin rpy="${rpy}" xyz="${xyz}"/>
+        <parent link="${connected_to}"/>
+        <child link="${prefix}panda_link0"/>
+      </joint>
+    </xacro:unless>
+
+    <!-- ===================================================================== -->
+    <!--  Base                                                                  -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link0">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link0.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link0.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link0"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link0_sc">
+        <xacro:franka_collision_capsule radius="${0.06 + safety_distance}"
+                                         length="0.03"
+                                         xyz="-0.075 0 0.06"
+                                         direction="x"/>
+      </link>
+
+      <joint name="${prefix}panda_link0_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link0"/>
+        <child link="${prefix}panda_link0_sc"/>
+      </joint>
+    </xacro:if>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 1 - rotation about Z                                             -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link1">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link1.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link1.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link1"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link1_sc">
+        <xacro:franka_collision_capsule radius="${0.06 + safety_distance}"
+                                         length="0.283"
+                                         xyz="0 0 -0.1915"/>
+      </link>
+
+      <joint name="${prefix}panda_link1_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link1"/>
+        <child link="${prefix}panda_link1_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint1" type="revolute">
+      <origin rpy="0 0 0" xyz="0 0 0.333"/>
+      <parent link="${prefix}panda_link0"/>
+      <child link="${prefix}panda_link1"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint1"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 2                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link2">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link2.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link2.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link2"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link2_sc">
+        <xacro:franka_collision_capsule radius="${0.06 + safety_distance}"
+                                         length="0.12"
+                                         xyz="0 0 0"/>
+      </link>
+
+      <joint name="${prefix}panda_link2_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link2"/>
+        <child link="${prefix}panda_link2_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint2" type="revolute">
+      <origin rpy="${-pi/2} 0 0" xyz="0 0 0"/>
+      <parent link="${prefix}panda_link1"/>
+      <child link="${prefix}panda_link2"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint2"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 3                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link3">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link3.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link3.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link3"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link3_sc">
+        <xacro:franka_collision_capsule radius="${0.06 + safety_distance}"
+                                         length="0.15"
+                                         xyz="0 0 -0.145"/>
+      </link>
+
+      <joint name="${prefix}panda_link3_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link3"/>
+        <child link="${prefix}panda_link3_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint3" type="revolute">
+      <origin rpy="${pi/2} 0 0" xyz="0 -0.316 0"/>
+      <parent link="${prefix}panda_link2"/>
+      <child link="${prefix}panda_link3"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint3"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 4                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link4">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link4.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link4.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link4"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link4_sc">
+        <xacro:franka_collision_capsule radius="${0.06 + safety_distance}"
+                                         length="0.12"
+                                         xyz="0 0 0"/>
+      </link>
+
+      <joint name="${prefix}panda_link4_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link4"/>
+        <child link="${prefix}panda_link4_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint4" type="revolute">
+      <origin rpy="${pi/2} 0 0" xyz="0.0825 0 0"/>
+      <parent link="${prefix}panda_link3"/>
+      <child link="${prefix}panda_link4"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint4"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 5                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link5">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link5.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link5.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link5"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link5_sc">
+        <xacro:franka_collision_capsule radius="${0.060 + safety_distance}"
+                                         length="0.10"
+                                         xyz="0 0 -0.26"/>
+        <xacro:franka_collision_capsule radius="${0.025 + safety_distance}"
+                                         length="0.14"
+                                         xyz="0 0.08 -0.13"/>
+      </link>
+
+      <joint name="${prefix}panda_link5_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link5"/>
+        <child link="${prefix}panda_link5_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint5" type="revolute">
+      <origin rpy="${-pi/2} 0 0" xyz="-0.0825 0.384 0"/>
+      <parent link="${prefix}panda_link4"/>
+      <child link="${prefix}panda_link5"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint5"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 6                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link6">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link6.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link6.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link6"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link6_sc">
+        <xacro:franka_collision_capsule radius="${0.05 + safety_distance}"
+                                         length="0.08"
+                                         xyz="0 0 -0.03"/>
+      </link>
+
+      <joint name="${prefix}panda_link6_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link6"/>
+        <child link="${prefix}panda_link6_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint6" type="revolute">
+      <origin rpy="${pi/2} 0 0" xyz="0 0 0"/>
+      <parent link="${prefix}panda_link5"/>
+      <child link="${prefix}panda_link6"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint6"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Joint 7                                                               -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link7">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/link7.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/link7.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_link7"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_link7_sc">
+        <xacro:franka_collision_capsule radius="${0.04 + safety_distance}"
+                                         length="0.14"
+                                         xyz="0 0 0.01"
+                                         direction="z"/>
+        <xacro:franka_collision_capsule radius="${0.03 + safety_distance}"
+                                         length="0.01"
+                                         xyz="0.06 0 0.082"
+                                         direction="x"/>
+      </link>
+
+      <joint name="${prefix}panda_link7_sc_joint" type="fixed">
+        <origin rpy="0 0 ${pi/4}" xyz="0 0 0"/>
+        <parent link="${prefix}panda_link7"/>
+        <child link="${prefix}panda_link7_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_joint7" type="revolute">
+      <origin rpy="${pi/2} 0 0" xyz="0.088 0 0"/>
+      <parent link="${prefix}panda_link6"/>
+      <child link="${prefix}panda_link7"/>
+      <axis xyz="0 0 1"/>
+      <xacro:franka_joint_limits name="panda_joint7"/>
+      <dynamics D="1" K="7000" damping="0.003" friction="0.2" mu_coulomb="0" mu_viscous="16"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Flange (link8) - the tool mounting plane                              -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_link8">
+      <collision>
+        <origin rpy="${pi} ${pi/2} ${pi/2}" xyz="0.0424 0.0424 -0.0250"/>
+        <geometry>
+          <cylinder length="0.01" radius="${0.03 + safety_distance}"/>
+        </geometry>
+      </collision>
+      <collision>
+        <origin rpy="0 0 0" xyz="0.0424 0.0424 -0.02"/>
+        <geometry>
+          <sphere radius="${0.03 + safety_distance}"/>
+        </geometry>
+      </collision>
+      <collision>
+        <origin rpy="0 0 0" xyz="0.0424 0.0424 -0.03"/>
+        <geometry>
+          <sphere radius="${0.03 + safety_distance}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}panda_joint8" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 0.107"/>
+      <parent link="${prefix}panda_link7"/>
+      <child link="${prefix}panda_link8"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- ========================================================================= -->
+  <!--  HAND                                                                     -->
+  <!-- ========================================================================= -->
+  <xacro:macro name="panda_hand" params="prefix:='' connected_to:='panda_link8' with_sc:=true">
+
+    <!-- ===================================================================== -->
+    <!--  Hand body, rigidly attached to the flange                            -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_hand">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/hand.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${collision_mesh_dir}/hand.stl"/>
+        </geometry>
+      </collision>
+      <xacro:franka_inertial name="panda_hand"/>
+    </link>
+
+    <xacro:if value="${with_sc}">
+      <link name="${prefix}panda_hand_sc">
+        <xacro:franka_collision_capsule radius="${0.04 + safety_distance}"
+                                         length="0.1"
+                                         xyz="0 0 0.04"
+                                         direction="y"/>
+        <xacro:franka_collision_capsule radius="${0.02 + safety_distance}"
+                                         length="0.1"
+                                         xyz="0 0 0.10"
+                                         direction="y"/>
+      </link>
+
+      <joint name="${prefix}panda_hand_sc_joint" type="fixed">
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <parent link="${prefix}panda_hand"/>
+        <child link="${prefix}panda_hand_sc"/>
+      </joint>
+    </xacro:if>
+
+    <joint name="${prefix}panda_hand_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${prefix}${connected_to}"/>
+      <child link="${prefix}panda_hand"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Left finger                                                           -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_leftfinger">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/finger.dae"/>
+        </geometry>
+        <material name="panda_rubber"/>
+      </visual>
+
+      <!-- screw mount -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 18.5e-3 11e-3"/>
+        <geometry>
+          <box size="22e-3 15e-3 20e-3"/>
+        </geometry>
+      </collision>
+      <!-- carriage sledge -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 6.8e-3 2.2e-3"/>
+        <geometry>
+          <box size="22e-3 8.8e-3 3.8e-3"/>
+        </geometry>
+      </collision>
+      <!-- diagonal finger -->
+      <collision>
+        <origin rpy="${pi/6} 0 0" xyz="0 15.9e-3 28.35e-3"/>
+        <geometry>
+          <box size="17.5e-3 7e-3 23.5e-3"/>
+        </geometry>
+      </collision>
+      <!-- rubber tip used for grasping -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 7.58e-3 45.25e-3"/>
+        <geometry>
+          <box size="17.5e-3 15.2e-3 18.5e-3"/>
+        </geometry>
+      </collision>
+
+      <xacro:franka_inertial name="panda_leftfinger"/>
+    </link>
+
+    <!-- ===================================================================== -->
+    <!--  Right finger                                                          -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_rightfinger">
+      <visual>
+        <origin rpy="0 0 ${pi}" xyz="0 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_dir}/finger.dae"/>
+        </geometry>
+        <material name="panda_rubber"/>
+      </visual>
+
+      <!-- screw mount -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 -18.5e-3 11e-3"/>
+        <geometry>
+          <box size="22e-3 15e-3 20e-3"/>
+        </geometry>
+      </collision>
+      <!-- carriage sledge -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 -6.8e-3 2.2e-3"/>
+        <geometry>
+          <box size="22e-3 8.8e-3 3.8e-3"/>
+        </geometry>
+      </collision>
+      <!-- diagonal finger -->
+      <collision>
+        <origin rpy="${-pi/6} 0 0" xyz="0 -15.9e-3 28.35e-3"/>
+        <geometry>
+          <box size="17.5e-3 7e-3 23.5e-3"/>
+        </geometry>
+      </collision>
+      <!-- rubber tip used for grasping -->
+      <collision>
+        <origin rpy="0 0 0" xyz="0 -7.58e-3 45.25e-3"/>
+        <geometry>
+          <box size="17.5e-3 15.2e-3 18.5e-3"/>
+        </geometry>
+      </collision>
+
+      <xacro:franka_inertial name="panda_rightfinger"/>
+    </link>
+
+    <!-- ===================================================================== -->
+    <!--  Finger joints - prismatic, mirrored about the hand plane             -->
+    <!-- ===================================================================== -->
+    <joint name="${prefix}panda_finger_joint1" type="prismatic">
+      <origin rpy="0 0 0" xyz="0 0 ${gripper['finger_offset']}"/>
+      <parent link="${prefix}panda_hand"/>
+      <child link="${prefix}panda_leftfinger"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="${gripper['finger_lower']}"
+             upper="${gripper['finger_upper']}"
+             velocity="${gripper['finger_velocity']}"
+             effort="${gripper['finger_effort']}"/>
+      <dynamics damping="${gripper['finger_damping']}"/>
+    </joint>
+
+    <joint name="${prefix}panda_finger_joint2" type="prismatic">
+      <origin rpy="0 0 0" xyz="0 0 ${gripper['finger_offset']}"/>
+      <parent link="${prefix}panda_hand"/>
+      <child link="${prefix}panda_rightfinger"/>
+      <axis xyz="0 -1 0"/>
+      <limit lower="${gripper['finger_lower']}"
+             upper="${gripper['finger_upper']}"
+             velocity="${gripper['finger_velocity']}"
+             effort="${gripper['finger_effort']}"/>
+      <mimic joint="${prefix}panda_finger_joint1"/>
+      <dynamics damping="${gripper['finger_damping']}"/>
+    </joint>
+
+    <!-- ===================================================================== -->
+    <!--  Tool frames                                                           -->
+    <!--    panda_hand_tcp    - flange tool centre point                         -->
+    <!--    panda_grasp_frame - between the finger tips, used for planning     -->
+    <!-- ===================================================================== -->
+    <link name="${prefix}panda_hand_tcp"/>
+
+    <joint name="${prefix}panda_hand_tcp_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="${' '.join([str(v) for v in gripper['tcp_xyz']])}"/>
+      <parent link="${prefix}panda_hand"/>
+      <child link="${prefix}panda_hand_tcp"/>
+    </joint>
+
+    <link name="${prefix}panda_grasp_frame"/>
+
+    <joint name="${prefix}panda_grasp_frame_joint" type="fixed">
+      <origin rpy="0 0 0" xyz="${' '.join([str(v) for v in gripper['grasp_frame_xyz']])}"/>
+      <parent link="${prefix}panda_hand"/>
+      <child link="${prefix}panda_grasp_frame"/>
+    </joint>
+  </xacro:macro>
+
+</robot>

@@ -35,7 +35,7 @@ Verified on the development machine:
 | Gazebo | 11.10.2 (Gazebo Classic) | `gazebo_ros`, `gazebo_plugins` |
 | ros2_control | 2.54.3 | `controller_manager`, `ros2_controllers` |
 | MoveIt 2 | 2.5.10 | `ros-humble-moveit` (via apt) |
-| Robot description | `franka_description` 1.0.1 | official Franka meshes/URDF (via apt) |
+| Robot description | local `franka_description` 0.1.0 | meshes and kinematics derived from upstream 1.0.1 |
 
 ### 2.1 Dependencies to install
 
@@ -49,15 +49,17 @@ sudo apt install \
     ros-humble-moveit-ros-planning-interface \
     ros-humble-moveit-configs-utils \
     ros-humble-moveit-resources-panda-moveit-config \
-    ros-humble-franka-description \
     ros-humble-joint-state-publisher-gui \
     ros-humble-ros2-controllers \
     ros-humble-xacro
 ```
 
-> `ros-humble-franka-description` ships the official Panda URDF/Xacro and mesh files.
-> Stage 1 wraps them in a local package so the description can be extended
-> (gripper, payloads, camera mounts) without forking upstream.
+> The workspace ships its own `franka_description` package.  Do **not** install
+> `ros-humble-franka-description` alongside it: both provide the same ament
+> resource name and the overlay would shadow one of them.  The local package
+> reuses the official Franka meshes and kinematics so it stays drop-in
+> compatible with upstream, while remaining easy to extend (payloads, camera
+> mounts, additional grippers).
 
 ---
 
@@ -68,7 +70,7 @@ franka_ws/
 ├── .gitignore
 ├── README.md
 └── src/
-    ├── franka_description/     # Stage 1 – URDF/Xacro, meshes, materials
+    ├── franka_description/     # Stage 1 – URDF/Xacro, meshes, launch, RViz
     ├── franka_gazebo/          # Stage 2 – Gazebo world, ros2_control tags
     ├── franka_control/         # Stage 3 – controller configs + spawners
     ├── franka_moveit/          # Stage 5 – SRDF, kinematics, OMPL, MoveIt configs
@@ -101,11 +103,20 @@ source install/setup.bash
 
 ```bash
 source install/setup.bash
-ros2 launch franka_bringup gazebo.launch.py     # Stage 2+
-ros2 launch franka_moveit moveit.launch.py       # Stage 5+
+
+# Stage 1 – inspect the model without a simulator
+ros2 launch franka_description visualize_panda.launch.py
+
+# Stage 2+ – spawned in Gazebo
+ros2 launch franka_bringup gazebo.launch.py
+
+# Stage 5+ – motion planning
+ros2 launch franka_moveit moveit.launch.py
 ```
 
-> Placeholder launch files — they are created in their respective stages.
+`visualize_panda.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui` and
+`rviz`, e.g. `hand:=false gui:=false`.  The remaining launch files are
+placeholders that arrive with their stages.
 
 ---
 

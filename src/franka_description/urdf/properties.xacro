@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========================================================================= -->
+  <!--                                                                           -->
+  <!--  PROPERTIES                                                               -->
+  <!--                                                                           -->
+  <!--  Single source of truth for every tunable number in the description:     -->
+  <!--  mesh locations, colours, joint limits, inertial parameters, the         -->
+  <!--  gripper geometry and the home pose.                                     -->
+  <!--                                                                           -->
+  <!--  Nothing in this file describes robot *structure* - that lives in        -->
+  <!--  panda.xacro.  This file only holds data plus the small helper macros   -->
+  <!--  that turn the data into URDF tags.                                      -->
+  <!--                                                                           -->
+  <!-- ========================================================================= -->
+
+  <!-- ========================================================================== -->
+  <!--  1. Asset locations                                                      -->
+  <!-- ========================================================================== -->
+  <xacro:property name="description_pkg" value="franka_description"/>
+  <xacro:property name="visual_mesh_dir" value="package://${description_pkg}/meshes/visual"/>
+  <xacro:property name="collision_mesh_dir" value="package://${description_pkg}/meshes/collision"/>
+
+  <!-- ========================================================================== -->
+  <!--  2. Colours and materials                                                -->
+  <!-- ========================================================================== -->
+  <xacro:property name="colour_white" value="0.95 0.95 0.95 1.0"/>
+  <xacro:property name="colour_grey" value="0.55 0.55 0.57 1.0"/>
+  <xacro:property name="colour_rubber" value="0.10 0.10 0.11 1.0"/>
+
+  <material name="panda_white">
+    <color rgba="${colour_white}"/>
+  </material>
+  <material name="panda_grey">
+    <color rgba="${colour_grey}"/>
+  </material>
+  <material name="panda_rubber">
+    <color rgba="${colour_rubber}"/>
+  </material>
+
+  <!-- ========================================================================== -->
+  <!--  3. Arm joint limits                                                     -->
+  <!--      Official Franka Emika values for the 7-axis Panda.                  -->
+  <!-- ========================================================================== -->
+  <xacro:property name="joint_limits" value="${dict(
+    panda_joint1 = dict(lower = -2.8973, upper =  2.8973, velocity = 2.175, effort = 87.0),
+    panda_joint2 = dict(lower = -1.7628, upper =  1.7628, velocity = 2.175, effort = 87.0),
+    panda_joint3 = dict(lower = -2.8973, upper =  2.8973, velocity = 2.175, effort = 87.0),
+    panda_joint4 = dict(lower = -3.0718, upper = -0.0698, velocity = 2.175, effort = 87.0),
+    panda_joint5 = dict(lower = -2.8973, upper =  2.8973, velocity = 2.610, effort = 12.0),
+    panda_joint6 = dict(lower = -0.0175, upper =  3.7525, velocity = 2.610, effort = 12.0),
+    panda_joint7 = dict(lower = -2.8973, upper =  2.8973, velocity = 2.610, effort = 12.0)
+  )}"/>
+
+  <!-- ========================================================================== -->
+  <!--  4. Inertial parameters                                                  -->
+  <!--      mass [kg], centre of mass [m], inertia tensor at the CoM [kg m^2].  -->
+  <!-- ========================================================================== -->
+  <xacro:property name="inertials" value="${dict(
+    panda_link0 = dict(
+      mass = 2.3966, com = [-0.01720,  0.00040,  0.07450],
+      ixx = 0.00900000000, iyy = 0.01150000000, izz = 0.00850000000,
+      ixy = 0.00000000000, ixz = 0.00200000000, iyz = 0.00000000000),
+    panda_link1 = dict(
+      mass = 2.7907, com = [ 0.00033, -0.02204, -0.04762],
+      ixx = 0.01564782655, iyy = 0.01439883526, izz = 0.00500443991,
+      ixy = 0.00000531236, ixz = -0.00003676721, iyz = -0.00248480843),
+    panda_link2 = dict(
+      mass = 2.5420, com = [ 0.00038, -0.09211,  0.01908],
+      ixx = 0.01662427728, iyy = 0.00462501261, izz = 0.01545124526,
+      ixy = 0.00003086077, ixz = 0.00000835940, iyz = 0.00355899830),
+    panda_link3 = dict(
+      mass = 2.2513, com = [ 0.05152,  0.01696, -0.02971],
+      ixx = 0.00631741992, iyy = 0.00866285493, izz = 0.00657804051,
+      ixy = 0.00097309955, ixz = 0.00292525834, iyz = 0.00093469224),
+    panda_link4 = dict(
+      mass = 2.2037, com = [-0.05113,  0.05825,  0.01698],
+      ixx = 0.00784585566, iyy = 0.00649543136, izz = 0.01003079917,
+      ixy = -0.00339591957, ixz = 0.00158704074, iyz = -0.00181477884),
+    panda_link5 = dict(
+      mass = 2.2855, com = [-0.00005,  0.03730, -0.09280],
+      ixx = 0.02297014781, iyy = 0.02095060919, izz = 0.00430606551,
+      ixy = -0.00000949345, ixz = -0.00002063156, iyz = 0.00382345782),
+    panda_link6 = dict(
+      mass = 1.3530, com = [ 0.06572, -0.00371,  0.00153],
+      ixx = 0.00087964522, iyy = 0.00277796968, izz = 0.00286701969,
+      ixy = -0.00021487814, ixz = -0.00011911662, iyz = 0.00001274322),
+    panda_link7 = dict(
+      mass = 0.35973, com = [0.00089, -0.00044, 0.05491],
+      ixx = 0.00019541063, iyy = 0.00019210361, izz = 0.00017936256,
+      ixy = 0.00000165231, ixz = 0.00000148826, iyz = -0.00000131132),
+    panda_hand = dict(
+      mass = 0.6544, com = [-0.0000376, 0.0119128, 0.0207260],
+      ixx = 0.00186, iyy = 0.00030, izz = 0.00174,
+      ixy = 0.00000, ixz = 0.00000, iyz = -0.00002),
+    panda_leftfinger = dict(
+      mass = 0.0291, com = [0.0, 0.0152850, 0.0219675],
+      ixx = 0.00000849, iyy = 0.00000853, izz = 0.00000177,
+      ixy = 0.00000000, ixz = 0.00000000, iyz = -0.00000106),
+    panda_rightfinger = dict(
+      mass = 0.0291, com = [0.0, -0.0152850, 0.0219675],
+      ixx = 0.00000849, iyy = 0.00000853, izz = 0.00000177,
+      ixy = 0.00000000, ixz = 0.00000000, iyz = -0.00000106)
+  )}"/>
+
+  <!-- ========================================================================== -->
+  <!--  5. Gripper geometry                                                     -->
+  <!-- ========================================================================== -->
+  <xacro:property name="gripper" value="${dict(
+    finger_lower      = 0.0,
+    finger_upper      = 0.04,
+    finger_velocity   = 0.2,
+    finger_effort     = 100.0,
+    finger_damping    = 0.3,
+    finger_offset     = 0.0584,
+    tcp_xyz           = [0.0, 0.0, 0.1034],
+    grasp_frame_xyz   = [0.0, 0.0, 0.1074]
+  )}"/>
+
+  <!-- ========================================================================== -->
+  <!--  6. Home pose                                                            -->
+  <!--      The canonical "ready" configuration of the Panda.                   -->
+  <!-- ========================================================================== -->
+  <xacro:property name="initial_positions" value="${dict(
+    panda_joint1 =  0.0,
+    panda_joint2 = -0.785,
+    panda_joint3 =  0.0,
+    panda_joint4 = -2.356,
+    panda_joint5 =  0.0,
+    panda_joint6 =  1.571,
+    panda_joint7 =  0.785
+  )}"/>
+
+  <!-- ========================================================================== -->
+  <!--  7. Self-collision padding                                               -->
+  <!--      The self-collision capsules below are inflated by this distance so  -->
+  <!--      that the planner keeps a safety margin around the arm.             -->
+  <!-- ========================================================================== -->
+  <xacro:property name="safety_distance" value="0.03"/>
+
+  <!-- ========================================================================== -->
+  <!--  Helper macros that turn the properties above into URDF tags             -->
+  <!-- ========================================================================== -->
+
+  <!-- Emits <limit> and <safety_controller> for the given arm joint. -->
+  <xacro:macro name="franka_joint_limits" params="name">
+    <xacro:property name="l" value="${joint_limits[name]}"/>
+    <limit lower="${l['lower']}"
+           upper="${l['upper']}"
+           velocity="${l['velocity']}"
+           effort="${l['effort']}"/>
+    <safety_controller k_position="100.0"
+                       k_velocity="40.0"
+                       soft_lower_limit="${l['lower']}"
+                       soft_upper_limit="${l['upper']}"/>
+  </xacro:macro>
+
+  <!-- Emits the <inertial> block of the given link. -->
+  <xacro:macro name="franka_inertial" params="name">
+    <xacro:property name="d" value="${inertials[name]}"/>
+    <inertial>
+      <origin xyz="${' '.join([str(v) for v in d['com']])}" rpy="0 0 0"/>
+      <mass value="${d['mass']}"/>
+      <inertia ixx="${d['ixx']}" ixy="${d['ixy']}" ixz="${d['ixz']}"
+               iyy="${d['iyy']}" iyz="${d['iyz']}" izz="${d['izz']}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!--
+    Adds a single collision capsule, built from a cylinder closed off by two
+    spheres at its caps.  The capsule is aligned with the axis given by
+    'direction' (one of x, y, z).
+
+    radius:    radius of both the cylinder and the two spheres [m]
+    length:    length of the cylinder, i.e. the distance between the centres
+               of the spheres - not the overall length of the capsule [m]
+    xyz:       position of the centre of the cylinder [m]
+    direction: axis of the capsule
+  -->
+  <xacro:macro name="franka_collision_capsule" params="radius length xyz:='0 0 0' direction:='z'">
+    <xacro:property name="r" value="${pi/2.0 if 'y' in direction else 0}"/>
+    <xacro:property name="p" value="${pi/2.0 if 'x' in direction else 0}"/>
+    <xacro:property name="x" value="${xyz.split(' ')[0]}"/>
+    <xacro:property name="y" value="${xyz.split(' ')[1]}"/>
+    <xacro:property name="z" value="${xyz.split(' ')[2]}"/>
+    <!-- Offsets of the sphere centres from the centre of the cylinder. -->
+    <xacro:property name="sx" value="${length / 2.0 if 'x' in direction else 0}"/>
+    <xacro:property name="sy" value="${length / 2.0 if 'y' in direction else 0}"/>
+    <xacro:property name="sz" value="${length / 2.0 if 'z' in direction else 0}"/>
+
+    <collision>
+      <origin rpy="${r} ${p} 0" xyz="${x} ${y} ${z}"/>
+      <geometry>
+        <cylinder length="${length}" radius="${radius}"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="${x + sx} ${y + sy} ${z + sz}"/>
+      <geometry>
+        <sphere radius="${radius}"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin xyz="${x - sx} ${y - sy} ${z - sz}"/>
+      <geometry>
+        <sphere radius="${radius}"/>
+      </geometry>
+    </collision>
+  </xacro:macro>
+
+</robot>
+
