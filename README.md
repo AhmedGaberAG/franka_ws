@@ -6,6 +6,16 @@ Simulation and manipulation stack for the **Franka Emika Panda** 7-DoF arm, buil
 The workspace is developed **incrementally**: each stage below is implemented, built and
 verified before the next one is started.
 
+## Preview
+
+| Franka Emika Panda | Model in RViz |
+| :---: | :---: |
+| ![Franka Emika Panda](media/panda_real.jpg) | ![Panda URDF in RViz](media/panda_rviz.png) |
+
+The photo of the real robot is by *Ims*, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Franka_Emika2.jpg),
+licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+The RViz screenshot shows the generated model at the ready pose.
+
 ---
 
 ## 1. Status
@@ -70,8 +80,9 @@ sudo apt install \
 
 ```
 franka_ws/
-├── .gitignore
+├── LICENSE
 ├── README.md
+├── media/                      # README images
 └── src/
     └── franka_description/     # URDF/Xacro, meshes, controllers, launch, RViz
 ```
@@ -117,9 +128,9 @@ ros2 launch franka_moveit moveit.launch.py
 `visualize_panda.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui` and
 `rviz`, e.g. `hand:=false gui:=false`.
 
-`gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand`, `with_sc`,
-`gz_version` and `is_ignition` (keep `is_ignition:=true gz_version:=6` on
-Humble; use `is_ignition:=false gz_version:=7` on Iron and newer).
+`gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
+The Gazebo flavour is detected from `ROS_DISTRO`: Ignition on Humble, and gz
+with the Bullet Featherstone engine on Iron and newer.
 
 ---
 
