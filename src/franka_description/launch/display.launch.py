@@ -6,9 +6,9 @@ without a simulator.
 
 Examples
 --------
-    ros2 launch franka_description visualize_panda.launch.py
-    ros2 launch franka_description visualize_panda.launch.py hand:=false
-    ros2 launch franka_description visualize_panda.launch.py gui:=false
+    ros2 launch franka_description display.launch.py
+    ros2 launch franka_description display.launch.py hand:=false
+    ros2 launch franka_description display.launch.py gui:=false
 """
 
 import os
