@@ -128,7 +128,7 @@ source install/setup.bash
 source install/setup.bash
 
 # Stage 1 – inspect the model without a simulator
-ros2 launch franka_description visualize_panda.launch.py
+ros2 launch franka_description display.launch.py
 
 # Stage 2 – spawn the model in Gazebo Sim
 ros2 launch franka_description gazebo.launch.py
@@ -140,7 +140,7 @@ ros2 launch franka_controller controller.launch.py
 ros2 launch franka_moveit moveit.launch.py
 ```
 
-`visualize_panda.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui`, `rviz`
+`display.launch.py` accepts `prefix`, `hand`, `with_sc`, `gui`, `rviz`
 and `use_sim_time`, e.g. `hand:=false gui:=false`.
 
 `gazebo.launch.py` accepts `world`, `gui`, `rviz`, `hand` and `with_sc`.
